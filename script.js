@@ -113,12 +113,26 @@ function renderPortfolio() {
     const projectsGrid = document.getElementById("dynamic-projects");
     if (projectsGrid) {
         projectsGrid.innerHTML = data.projects.map(p => {
-            sliders[p.sliderId] = { currentIndex: 0 }; // init slider state
-            const slidesHtml = p.images.map((img, i) => `
+            // Filter out any images containing problematic characters like '<' or '>'
+            let imagesToUse = (p.images || []).filter(img => typeof img === 'string' && !(/[<>]/.test(img)) && img.trim() !== '');
+            if (!imagesToUse || imagesToUse.length === 0) imagesToUse = ['images/mine.png'];
+
+            const imgCount = imagesToUse.length;
+            // Only initialize slider state for multi-image sliders
+            if (imgCount > 1) sliders[p.sliderId] = { currentIndex: 0, length: imgCount };
+
+            const slidesHtml = imagesToUse.map((img, i) => `
                 <img src="${img}" alt="${p.title}" class="slide ${i === 0 ? 'active' : ''}">
             `).join("");
 
-            const tagsHtml = p.tags.split(',').map(tag => `<span>${tag.trim()}</span>`).join("");
+            const tagsHtml = (p.tags || '').split(',').map(tag => `<span>${tag.trim()}</span>`).join("");
+
+            // Only render controls if there are multiple images
+            const controlsHtml = imgCount > 1 ? `
+                    <button class="slider-btn prev" onclick="moveSlide('${p.sliderId}', -1)"><i class="fas fa-chevron-left"></i></button>
+                    <button class="slider-btn next" onclick="moveSlide('${p.sliderId}', 1)"><i class="fas fa-chevron-right"></i></button>
+                    <div class="slider-dots"></div>
+                ` : '';
 
             return `
             <div class="project-card glass-card reveal">
@@ -126,9 +140,7 @@ function renderPortfolio() {
                     <div class="slides">
                         ${slidesHtml}
                     </div>
-                    <button class="slider-btn prev" onclick="moveSlide('${p.sliderId}', -1)"><i class="fas fa-chevron-left"></i></button>
-                    <button class="slider-btn next" onclick="moveSlide('${p.sliderId}', 1)"><i class="fas fa-chevron-right"></i></button>
-                    <div class="slider-dots"></div>
+                    ${controlsHtml}
                 </div>
                 <div class="project-info">
                     <h3>${p.title}</h3>
@@ -267,7 +279,7 @@ function moveSlide(sliderId, direction) {
     if (!sliderDiv) return;
 
     const slides = sliderDiv.querySelectorAll('.slide');
-    if (slides.length === 0) return;
+    if (slides.length <= 1) return; // nothing to slide
 
     if (!sliders[sliderId]) sliders[sliderId] = { currentIndex: 0 };
     let currentIndex = sliders[sliderId].currentIndex;
