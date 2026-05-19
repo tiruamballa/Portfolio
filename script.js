@@ -13,11 +13,36 @@ const defaultData = {
         { id: "10", name: "AI Tools", icon: "fas fa-robot", color: "#A55EEA" }
     ],
     certs: [
-        { id: "1", title: "IBM SQL Certification", icon: "fas fa-certificate" },
-        { id: "2", title: "Cisco Python Essentials 1", icon: "fas fa-certificate" },
-        { id: "3", title: "Cisco Python Essentials 2", icon: "fas fa-certificate" },
-        { id: "4", title: "C Programming Level 1", icon: "fas fa-certificate" },
-        { id: "5", title: "C Programming Level 2", icon: "fas fa-certificate" }
+        {
+            id: "1",
+            title: "IBM SQL Certification",
+            icon: "fas fa-certificate",
+            docLink: "certifiactions/sql ibm certificate.pdf"
+        },
+        {
+            id: "2",
+            title: "Cisco Python Essentials 1",
+            icon: "fas fa-certificate",
+            docLink: "certifiactions/PythonEssentials1.pdf"
+        },
+        {
+            id: "3",
+            title: "Cisco Python Essentials 2",
+            icon: "fas fa-certificate",
+            docLink: "certifiactions/PythonEssentials2.pdf"
+        },
+        {
+            id: "4",
+            title: "C Programming Level 1",
+            icon: "fas fa-certificate",
+            docLink: "certifiactions/CEssentials1.pdf"
+        },
+        {
+            id: "5",
+            title: "C Programming Level 2",
+            icon: "fas fa-certificate",
+            docLink: "certifiactions/CEssentials2.pdf"
+        }
     ],
     projects: [
         {
@@ -47,7 +72,7 @@ const defaultData = {
         },
         {
             id: "3",
-            sliderId: "slider-quiz",
+            sliderId: "slider-arogyacare",
             title: "ArogyaCare",
             desc: "Arogyacare is a multilingual AI-powered healthcare chatbot that helps users get reliable health information in their preferred language.It uses Google’s Gemini AI model through a Node.js backend to understand natural language queries and generate medically aware, human-like answers.",
             tags: "DJango,python,Sockets",
@@ -61,7 +86,9 @@ const defaultData = {
     volunteering: [
         { id: "1", name: "Udbhav Event", image: "images/voulnteer/udbhav voulnteer 1.jpeg" },
         { id: "2", name: "Community Activity", image: "images/voulnteer/udbhav volnteer 2.jpeg" },
-        { id: "3", name: "CSI Volunteers", image: "images/voulnteer/volntters csi group photo.jpeg" }
+        { id: "3", name: "CSI Volunteers", image: "images/voulnteer/volntters csi group photo.jpeg" },
+        { id: "4", name: "Fun Clock Event (Organized by Me)", image: "images/voulnteer/fun clock organiser 2.jpeg" },
+        { id: "5", name: "Fun Clock Event Poster (Organized by Me)", image: "images/voulnteer/funclock.png" }
     ]
 };
 
@@ -102,9 +129,13 @@ function renderPortfolio() {
     const certsGrid = document.getElementById("dynamic-certs");
     if (certsGrid) {
         certsGrid.innerHTML = data.certs.map(c => `
-            <div class="cert-card glass-card reveal">
+            <div class="cert-card glass-card reveal clickable" onclick="openDocument('${c.docLink}')" title="Open ${c.title}">
                 <i class="${c.icon} cert-icon"></i>
-                <h3>${c.title}</h3>
+                <div>
+                    <h3>${c.title}</h3>
+                    <p class="cert-note">Click to view certificate</p>
+                    <span class="pdf-badge">View PDF</span>
+                </div>
             </div>
         `).join("");
     }
@@ -172,6 +203,11 @@ function renderPortfolio() {
 
     // Re-trigger scroll reveal for newly added DOM elements
     reveal();
+}
+
+function openDocument(link) {
+    if (!link || typeof link !== 'string') return;
+    window.open(encodeURI(link), '_blank');
 }
 
 // --- Mobile Navigation Toggle ---
