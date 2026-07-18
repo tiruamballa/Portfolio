@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+
+jwt:
+  secret: 9a67471a79d3d3a778e82ef45b74681617e82ef45b74681617e82ef45b746816
+  access-expiration: 900000 # 15 minutes in ms
+  refresh-expiration: 604800000 # 7 days in ms
