@@ -43,6 +43,15 @@ const getSkillIcon = (name) => {
   }
 }
 
+const getProjectImage = (title) => {
+  const t = title.toLowerCase();
+  if (t.includes('jeevmitra')) return '/images/projects/jeevmitra.png';
+  if (t.includes('atr')) return '/images/projects/atr.png';
+  if (t.includes('quizlive')) return '/images/projects/quizlive.png';
+  if (t.includes('arogyacare')) return '/images/projects/arogyacare.png';
+  return "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=512&q=80";
+}
+
 // Fallback Data to ensure the portfolio works out-of-the-box
 const FALLBACK_DATA = {
   settings: {
@@ -55,39 +64,55 @@ const FALLBACK_DATA = {
   projects: [
     {
       id: 1,
-      title: "MEDIQ+ Medicine Tracking App",
-      description: "An AI-based medicine management and tracking application designed to help patients monitor medication schedules and expiry logs efficiently.",
-      githubUrl: "https://github.com/tiruamballa/MEDIQPLUS",
+      title: "JeevMitra Healthcare App",
+      description: "A complete healthcare portal designed to connect patients, pharmacies, and observers into a cohesive digital ecosystem to track medication adherence.",
+      githubUrl: "https://github.com/tiruamballa/JeevMitra",
       demoUrl: "#",
-      challenges: "Synchronizing high-frequency QR generation, handling inventory triggers, and preventing transaction lockups.",
-      features: "Real-time billing, Stock notifications, Expiry telemetry metrics, Multiclass admin portals.",
+      challenges: "Synchronizing high-frequency observer notifications and computing real-time gamified compliance metrics.",
+      features: "DoseTrack checklists, JeevScore compliance index, observer portals, POS billing terminals.",
       statusEnum: "COMPLETED",
       featured: true,
-      skillsUsed: [{ name: "React" }, { name: "Node.js" }, { name: "AI Integration" }]
+      image: "/images/projects/jeevmitra.png",
+      skillsUsed: [{ name: "Java" }, { name: "Spring Boot" }, { name: "React" }, { name: "MySQL" }]
     },
     {
       id: 2,
-      title: "QuizLive",
-      description: "An interactive, real-time quiz portal built for multi-user engaging quiz streams using modern sockets.",
-      githubUrl: "https://github.com/tiruamballa/quizlive.errorists",
+      title: "ATR Operating System",
+      description: "A custom-built operating system mapping career execution pathways, streaks, and university attendance tracking for engineering students.",
+      githubUrl: "https://github.com/tiruamballa/ATR",
       demoUrl: "#",
-      challenges: "Synchronizing websocket quiz timers without server lag spikes.",
-      features: "Real-time leaderboards, Concurrent session handlers, Quiz generators.",
-      statusEnum: "COMPLETED",
+      challenges: "Processing dynamic streak increments based on task weights and calculating recovery timelines.",
+      features: "Execution dashboards, attendance recovery buffer algorithms, LeetCode target metrics.",
+      statusEnum: "IN_PROGRESS",
       featured: true,
-      skillsUsed: [{ name: "Django" }, { name: "Python" }, { name: "WebSockets" }]
+      image: "/images/projects/atr.png",
+      skillsUsed: [{ name: "Java" }, { name: "Spring Boot" }, { name: "React" }]
     },
     {
       id: 3,
-      title: "ArogyaCare",
-      description: "A multilingual AI-powered healthcare assistant chatbot that outputs reliable medical suggestions in multiple regional languages.",
-      githubUrl: "https://github.com/tiruamballa/Arogyacare",
+      title: "QuizLive",
+      description: "An interactive, real-time multi-user quiz streaming platform powered by WebSockets to synchronize quiz timers and manage concurrent user session data.",
+      githubUrl: "https://github.com/tiruamballa/quizlive.errorists",
       demoUrl: "#",
-      challenges: "Context retention under large token payloads, structuring robust guardrails for prompt compliance.",
-      features: "Multilingual query models, RAG vector context mapping, Dynamic clinic referrals.",
+      challenges: "Synchronizing quiz timelines and state transitions across hundreds of socket connections without frame drop.",
+      features: "Real-time leaderboards, session score metrics, responsive quiz dashboards.",
       statusEnum: "COMPLETED",
       featured: true,
-      skillsUsed: [{ name: "Django" }, { name: "Python" }, { name: "Gemini API" }]
+      image: "/images/projects/quizlive.png",
+      skillsUsed: [{ name: "Python" }, { name: "Django" }, { name: "WebSockets" }]
+    },
+    {
+      id: 4,
+      title: "ArogyaCare AI Assistant",
+      description: "A multilingual AI-powered healthcare assistant chatbot utilizing retrieval-augmented generation (RAG) and Gemini API integration for localized medical consulting.",
+      githubUrl: "https://github.com/tiruamballa/Arogyacare",
+      demoUrl: "#",
+      challenges: "Structuring context injection guardrails for safety and retaining chat history across sessions.",
+      features: "RAG medical databases, localized language translations, Gemini prompt pipelines.",
+      statusEnum: "COMPLETED",
+      featured: true,
+      image: "/images/projects/arogyacare.png",
+      skillsUsed: [{ name: "Python" }, { name: "Django" }, { name: "Gemini API" }]
     }
   ],
   skills: [
@@ -106,48 +131,92 @@ const FALLBACK_DATA = {
       company: "Google Dev Program",
       role: "Google Android Development Intern",
       duration: "Dec 2025 - Present",
-      description: "Implementing advanced mobile architectures, responsive client grids, and performance audits."
+      description: "Implementing advanced mobile architectures, responsive client grids, and conducting performance audits to improve load times by X% (TODO: quantify performance gain)."
     },
     {
       id: 2,
       company: "Brain O Vision",
       role: "Agentic AI Developer Intern",
       duration: "Sep 2025 - Nov 2025",
-      description: "Built autonomous multi-agent pipelines and prompt routing workflows utilizing vector embeddings."
+      description: "Built autonomous multi-agent pipelines and prompt routing workflows utilizing vector embeddings, reducing token consumption by X% (TODO: quantify savings)."
     },
     {
       id: 3,
       company: "Java Full Stack Developer",
       role: "Enterprise Backend Intern",
       duration: "May 2025 - Aug 2025",
-      description: "Designed stable database relationships, parametrized query filters, and REST access endpoints."
+      description: "Designed stable database relationships, parametrized query filters, and REST access endpoints, optimizing average query execution speeds by X% (TODO: quantify database optimization)."
     },
     {
       id: 4,
       company: "InAmigos",
       role: "Web Intern",
       duration: "Jan 2025 - Apr 2025",
-      description: "Optimized frontend component rendering paths and engineered user dashboard elements."
+      description: "Optimized frontend component rendering paths and engineered user dashboard elements, improving rendering benchmark speeds by X% (TODO: quantify web speed improvement)."
     }
   ],
-  roadmap: [
-    { name: "Spring Boot Enterprise Patterns", trackType: "PROGRAMMING", progressPercentage: 85, currentTopic: "Microservices & JWT Configs" },
-    { name: "Docker & AWS Deployments", trackType: "PROGRAMMING", progressPercentage: 60, currentTopic: "ECS & Elastic Beanstalk" },
-    { name: "Agentic AI & RAG Orchestration", trackType: "AI", progressPercentage: 75, currentTopic: "LangChain Tool Agents" },
-    { name: "Data Structures & Algorithms (Java)", trackType: "PROGRAMMING", progressPercentage: 90, currentTopic: "Graphs & Dynamic Programming" }
-  ],
   certifications: [
-    { name: "IBM SQL Certification", organization: "IBM Skills Network", issueDate: "2024", verifyLink: "/certifiactions/sql ibm certificate.pdf" },
-    { name: "Cisco Python Essentials 1", organization: "Cisco Networking Academy", issueDate: "2025", verifyLink: "/certifiactions/PythonEssentials1.pdf" },
-    { name: "Cisco Python Essentials 2", organization: "Cisco Networking Academy", issueDate: "2025", verifyLink: "/certifiactions/PythonEssentials2.pdf" },
-    { name: "C Programming Level 1", organization: "Cisco Networking Academy / OpenEDG", issueDate: "2025", verifyLink: "/certifiactions/CEssentials1.pdf" },
-    { name: "C Programming Level 2", organization: "Cisco Networking Academy / OpenEDG", issueDate: "2025", verifyLink: "/certifiactions/CEssentials2.pdf" }
+    { 
+      name: "IBM SQL Certification", 
+      organization: "IBM Skills Network", 
+      issueDate: "2024", 
+      verifyLink: "https://www.credly.com/badges/db4e1d70-7467-4226-bf75-80271c668ad7", /* TODO: Verify or update Credly verify link if different */
+      downloadLink: "/certifiactions/sql-ibm-certificate.pdf" 
+    },
+    { 
+      name: "Cisco Python Essentials 1", 
+      organization: "Cisco Networking Academy", 
+      issueDate: "2025", 
+      verifyLink: "https://www.credly.com/org/cisco/badge/python-essentials-1", /* TODO: Verify or update Credly verify link */
+      downloadLink: "/certifiactions/PythonEssentials1.pdf" 
+    },
+    { 
+      name: "Cisco Python Essentials 2", 
+      organization: "Cisco Networking Academy", 
+      issueDate: "2025", 
+      verifyLink: "https://www.credly.com/org/cisco/badge/python-essentials-2", /* TODO: Verify or update Credly verify link */
+      downloadLink: "/certifiactions/PythonEssentials2.pdf" 
+    },
+    { 
+      name: "C Programming Level 1", 
+      organization: "Cisco Networking Academy / OpenEDG", 
+      issueDate: "2025", 
+      verifyLink: "https://verify.edube.org/", /* TODO: Verify or update Edube verification link */
+      downloadLink: "/certifiactions/CEssentials1.pdf" 
+    },
+    { 
+      name: "C Programming Level 2", 
+      organization: "Cisco Networking Academy / OpenEDG", 
+      issueDate: "2025", 
+      verifyLink: "https://verify.edube.org/", /* TODO: Verify or update Edube verification link */
+      downloadLink: "/certifiactions/CEssentials2.pdf" 
+    }
   ],
   volunteering: [
-    { id: "1", name: "Udbhav Event Organizer", image: "/images/voulnteer/udbhav voulnteer 1.jpeg" },
-    { id: "2", name: "Community Support Activity", image: "/images/voulnteer/udbhav volnteer 2.jpeg" },
-    { id: "3", name: "CSI Active Committee Group (Working as EBM - Executive Body Member)", image: "/images/voulnteer/volntters csi group photo.jpeg" },
-    { id: "4", name: "Fun Clock Event Organizer", image: "/images/voulnteer/fun clock organiser 2.jpeg" }
+    { 
+      id: "1", 
+      name: "Udbhav Event Organizer", 
+      image: "/images/voulnteer/udbhav voulnteer 1.jpeg",
+      description: "Coordinated tech fest events and schedule structures for X+ attendees (TODO: quantify scale)."
+    },
+    { 
+      id: "2", 
+      name: "Community Support Activity", 
+      image: "/images/voulnteer/udbhav volnteer 2.jpeg",
+      description: "Assisted regional community coordination efforts during major events." 
+    },
+    { 
+      id: "3", 
+      name: "CSI Active Committee Group (Working as EBM - Executive Body Member)", 
+      image: "/images/voulnteer/volntters csi group photo.jpeg",
+      description: "Currently leading workshops and managing design/technical tasks for X+ students (TODO: quantify scale)."
+    },
+    { 
+      id: "4", 
+      name: "Fun Clock Event Organizer", 
+      image: "/images/voulnteer/fun clock organiser 2.jpeg",
+      description: "Supervised layout configuration and registration checkpoints for interactive events." 
+    }
   ]
 }
 
@@ -185,43 +254,74 @@ export default function App() {
     initialData: FALLBACK_DATA.certifications
   })
 
-  // Contact submit mutation
-  const contactMutation = useMutation({
-    mutationFn: (payload) => axios.post(`${API_BASE}/contact`, payload),
-    onSuccess: () => {
-      setSubmitMessageStatus('Transmission dispatched successfully! Talk to you soon.')
-      setContactForm({ senderName: '', senderEmail: '', messagePayload: '' })
-    },
-    onError: () => {
-      // Offline fallback success for presentation
-      setSubmitMessageStatus('Offline simulated transmission success! Thanks Tiru.')
-      setContactForm({ senderName: '', senderEmail: '', messagePayload: '' })
-    }
-  })
-
+  // Contact submit validation with honeypot spam protection
   const handleContactSubmit = (e) => {
     e.preventDefault()
+    if (contactForm.botField) {
+      setSubmitMessageStatus('Transmission dispatched (filtered).')
+      return
+    }
     if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.messagePayload) {
       setSubmitMessageStatus('Please fill all fields.')
       return
     }
-    contactMutation.mutate(contactForm)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(contactForm.senderEmail)) {
+      setSubmitMessageStatus('Invalid email address format.')
+      return
+    }
+    contactMutation.mutate({
+      senderName: contactForm.senderName,
+      senderEmail: contactForm.senderEmail,
+      messagePayload: contactForm.messagePayload
+    })
   }
 
   // Terminal actions
   const handleTerminalSubmit = (e) => {
     e.preventDefault()
     const cmd = terminalInput.trim().toLowerCase()
+    const args = cmd.split(' ')
+    const baseCmd = args[0]
     let outText = ''
-    if (cmd === 'help') {
-      outText = 'Available commands: whoami, skills, status, clear'
-    } else if (cmd === 'whoami') {
+    
+    if (baseCmd === 'help') {
+      outText = 'Available commands: whoami, skills, status, contact, resume, projects, clear'
+    } else if (baseCmd === 'whoami') {
       outText = 'Tiru Amballa — B.Tech IT Student @ SRKR. Full-Stack Dev specialized in Java, Spring Boot, & AI.'
-    } else if (cmd === 'skills') {
+    } else if (baseCmd === 'skills') {
       outText = 'Java, Python, Spring Boot, React, MySQL, MongoDB, RAG, Agentic AI.'
-    } else if (cmd === 'status') {
+    } else if (baseCmd === 'status') {
       outText = 'Currently building microservice pipelines & learning AWS cloud.'
-    } else if (cmd === 'clear') {
+    } else if (baseCmd === 'contact') {
+      outText = 'Email: tiruamballa.it@gmail.com | LinkedIn: linkedin.com/in/amballa-tirumala-rao-08224a322/ | GitHub: github.com/tiruamballa'
+    } else if (baseCmd === 'resume') {
+      window.open('/resume/tiru-resume-compressed.pdf', '_blank')
+      outText = 'Opening resume document link in a new tab...'
+    } else if (baseCmd === 'projects') {
+      outText = 'Core Projects:\n' +
+                '- jeevmitra: Healthcare Portal -> Type "open jeevmitra"\n' +
+                '- atr: Student Tracker & OS -> Type "open atr"\n' +
+                '- quizlive: Live Sockets Quiz -> Type "open quizlive"\n' +
+                '- arogyacare: AI Assistant -> Type "open arogyacare"'
+    } else if (baseCmd === 'open') {
+      const target = args[1]
+      if (target === 'jeevmitra') {
+        window.open('https://github.com/tiruamballa/JeevMitra', '_blank')
+        outText = 'Launching JeevMitra GitHub repository in new tab...'
+      } else if (target === 'atr') {
+        window.open('https://github.com/tiruamballa/ATR', '_blank')
+        outText = 'Launching ATR OS GitHub repository in new tab...'
+      } else if (target === 'quizlive') {
+        window.open('https://github.com/tiruamballa/quizlive.errorists', '_blank')
+        outText = 'Launching QuizLive GitHub repository in new tab...'
+      } else if (target === 'arogyacare') {
+        window.open('https://github.com/tiruamballa/Arogyacare', '_blank')
+        outText = 'Launching ArogyaCare GitHub repository in new tab...'
+      } else {
+        outText = `Project reference not found: "${target || ''}". Available tags: jeevmitra, atr, quizlive, arogyacare.`
+      }
+    } else if (baseCmd === 'clear') {
       setTerminalOutput([])
       setTerminalInput('')
       return
@@ -244,8 +344,22 @@ export default function App() {
     { type: 'system', text: 'CLI Snippets Console [Version 1.0.0]' },
     { type: 'system', text: 'Type "help" to list available commands.' }
   ])
-  const [contactForm, setContactForm] = useState({ senderName: '', senderEmail: '', messagePayload: '' })
+  const [contactForm, setContactForm] = useState({ senderName: '', senderEmail: '', messagePayload: '', botField: '' })
   const [submitMessageStatus, setSubmitMessageStatus] = useState('')
+
+  // Contact submit mutation
+  const contactMutation = useMutation({
+    mutationFn: (payload) => axios.post(`${API_BASE}/contact`, payload),
+    onSuccess: () => {
+      setSubmitMessageStatus('Transmission dispatched successfully! Talk to you soon.')
+      setContactForm({ senderName: '', senderEmail: '', messagePayload: '', botField: '' })
+    },
+    onError: () => {
+      // Offline fallback success for presentation
+      setSubmitMessageStatus('Offline simulated transmission success! Thanks Tiru.')
+      setContactForm({ senderName: '', senderEmail: '', messagePayload: '', botField: '' })
+    }
+  })
 
   return (
     <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-8 space-y-16">
@@ -261,7 +375,10 @@ export default function App() {
           <a href="#contact" className="hover:text-primary transition">Contact</a>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-[ping_3.5s_cubic-bezier(0,0,0.2,1)_infinite] absolute inline-flex h-full w-full rounded-full bg-success opacity-60"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
+          </span>
           <span className="text-xs text-muted font-mono">{settings.availability || FALLBACK_DATA.settings.availability}</span>
         </div>
       </header>
@@ -284,7 +401,7 @@ export default function App() {
               Start Collaboration
             </a>
             <a 
-              href="/resume/tiru resume_compressed.pdf" 
+              href="/resume/tiru-resume-compressed.pdf" 
               download="Tiru_Amballa_Resume.pdf"
               className="px-6 py-3 rounded-sm border border-cardBorder hover:border-primary/50 bg-surface/50 text-slate-200 hover:text-white flex items-center gap-2 transition"
             >
@@ -315,11 +432,10 @@ export default function App() {
           <div className="md:col-span-2 bg-surface border border-cardBorder p-6 rounded-md space-y-4 premium-card spotlight-card">
             <h3 className="text-lg font-bold text-accent">Biography</h3>
             <p className="text-muted leading-relaxed">
-              I am currently pursuing a <strong>B.Tech in Information Technology</strong> at SRKR Engineering College (Graduation 2028). 
-              My journey as a software developer is driven by building scalable applications, designing modular service controllers, and learning data structures.
+              I am a 3rd-year B.Tech in Information Technology student at SRKR Engineering College, Bhimavaram. My technical focus is centered on Java application architectures, branching into React, Data Analytics, and Web Development.
             </p>
             <p className="text-muted leading-relaxed">
-              I specialize in <strong>Java and Spring Boot architectures</strong>, frontend widgets in <strong>React & Tailwind</strong>, and integrations for <strong>Agentic AI models</strong>. As a CSI Executive Body Member, I also guide student hackathons and collaborate on open-source packages.
+              I specialize in building backend services with Java and Spring Boot, managing relational structures with SQL, and building clean interfaces using React, HTML, and CSS. As an Executive Body Member of the Computer Society of India (CSI) student club, I actively contribute to technical development and design tasks for campus initiatives. I am seeking opportunities to apply my full-stack capabilities to real-world development pipelines.
             </p>
           </div>
           
@@ -344,7 +460,7 @@ export default function App() {
               <a href="https://www.linkedin.com/in/amballa-tirumala-rao-08224a322/" target="_blank" className="p-2 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition">
                 <Linkedin size={16} />
               </a>
-              <a href="mailto:tiruamballa.it.@gmail.com" className="p-2 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition">
+              <a href="mailto:tiruamballa.it@gmail.com" className="p-2 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition">
                 <Mail size={16} />
               </a>
             </div>
@@ -389,6 +505,25 @@ export default function App() {
             </div>
           ))}
         </div>
+
+        {/* Currently Learning Subsection */}
+        <div className="mt-8 pt-6 border-t border-cardBorder/30 space-y-4 w-full">
+          <h3 className="text-xs font-semibold text-accent font-mono uppercase tracking-wider">Active Skill Expansion</h3>
+          <div className="flex flex-wrap gap-3">
+            <span className="px-3 py-1.5 border border-dashed border-cardBorder hover:border-primary/50 text-xs text-muted font-mono rounded-sm transition">
+              React Context & State Depth
+            </span>
+            <span className="px-3 py-1.5 border border-dashed border-cardBorder hover:border-primary/50 text-xs text-muted font-mono rounded-sm transition">
+              Docker & AWS ECS Pipelines
+            </span>
+            <span className="px-3 py-1.5 border border-dashed border-cardBorder hover:border-primary/50 text-xs text-muted font-mono rounded-sm transition">
+              RAG & LangChain Multi-Agents
+            </span>
+            <span className="px-3 py-1.5 border border-dashed border-cardBorder hover:border-primary/50 text-xs text-muted font-mono rounded-sm transition">
+              Data Structures & Graphs (Java)
+            </span>
+          </div>
+        </div>
       </section>
 
       {/* 5. Featured Projects Bento Grid */}
@@ -401,26 +536,62 @@ export default function App() {
           {projects.map((proj) => (
             <div 
               key={proj.id} 
-              className="bg-surface border border-cardBorder p-6 rounded-md flex flex-col justify-between gap-4 cursor-pointer premium-card spotlight-card"
+              className="bg-surface border border-cardBorder rounded-md overflow-hidden flex flex-col justify-between cursor-pointer premium-card spotlight-card"
               onClick={() => setSelectedProject(proj)}
             >
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-display font-bold text-lg text-white group-hover:text-primary transition">{proj.title}</h3>
-                  <span className="text-xs px-2 py-0.5 border border-primary/20 bg-primary/5 text-accent font-mono rounded-sm">{proj.statusEnum}</span>
-                </div>
-                <p className="text-sm text-muted line-clamp-3 leading-relaxed">{proj.description}</p>
+              {/* Project Image Header */}
+              <div className="h-44 w-full overflow-hidden bg-background border-b border-cardBorder/30 relative">
+                <img 
+                  src={getProjectImage(proj.title)} 
+                  alt={proj.title} 
+                  onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=512&q=80" }}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                />
               </div>
-
-              <div className="flex justify-between items-center pt-2 border-t border-cardBorder/30">
-                <div className="flex gap-2">
-                  {proj.skillsUsed && proj.skillsUsed.map((sk, index) => (
-                    <span key={index} className="text-xs text-muted font-mono px-2 py-0.5 bg-background border border-cardBorder rounded-sm">{sk.name}</span>
-                  ))}
+              <div className="p-6 flex flex-col justify-between flex-1 gap-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-display font-bold text-lg text-white group-hover:text-primary transition">{proj.title}</h3>
+                    <span className="text-xs px-2 py-0.5 border border-primary/20 bg-primary/5 text-accent font-mono rounded-sm">{proj.statusEnum}</span>
+                  </div>
+                  <p className="text-sm text-muted line-clamp-3 leading-relaxed">{proj.description}</p>
                 </div>
-                <span className="text-xs text-primary font-semibold flex items-center gap-1">
-                  View Dossier <ChevronRight size={14} />
-                </span>
+
+                <div className="flex justify-between items-center pt-2 border-t border-cardBorder/30">
+                  <div className="flex gap-2">
+                    {proj.skillsUsed && proj.skillsUsed.map((sk, index) => (
+                      <span key={index} className="text-xs text-muted font-mono px-2 py-0.5 bg-background border border-cardBorder rounded-sm">{sk.name}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <a 
+                        href={proj.githubUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-1.5 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition flex items-center justify-center"
+                        title="Repository"
+                      >
+                        <Github size={14} />
+                      </a>
+                      {proj.demoUrl && proj.demoUrl !== '#' && (
+                        <a 
+                          href={proj.demoUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="p-1.5 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition flex items-center justify-center"
+                          title="Live Demo"
+                        >
+                          <ExternalLink size={14} />
+                        </a>
+                      )}
+                    </div>
+                    <span className="text-xs text-primary font-semibold flex items-center gap-1">
+                      Dossier <ChevronRight size={14} />
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -520,15 +691,30 @@ export default function App() {
                 </h3>
                 <p className="text-xs text-muted mt-1">{cert.organization} — {cert.issueDate}</p>
               </div>
-              {cert.verifyLink && (
-                <a 
-                  href={cert.verifyLink} 
-                  target="_blank" 
-                  className="text-xs text-accent hover:text-white flex items-center gap-1 font-mono transition"
-                >
-                  Verify Certificate <ExternalLink size={12} />
-                </a>
-              )}
+              <div className="flex justify-between items-center pt-2 border-t border-cardBorder/30">
+                {cert.verifyLink ? (
+                  <a 
+                    href={cert.verifyLink} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="text-xs text-primary hover:text-white flex items-center gap-1 font-mono transition"
+                  >
+                    Verify Online <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-xs text-muted font-mono">Record Logged</span>
+                )}
+                {cert.downloadLink && (
+                  <a 
+                    href={cert.downloadLink} 
+                    download
+                    className="p-1 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition flex items-center gap-1.5 text-xs font-mono"
+                    title="Download PDF Copy"
+                  >
+                    <FileDown size={12} /> PDF
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -589,11 +775,15 @@ export default function App() {
                   src={item.image} 
                   alt={item.name} 
                   onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=512&q=80" }}
-                  className="w-full h-full object-cover hover:scale-105 transition duration-500" 
+                  className="w-full h-full object-cover hover:scale-105 transition duration-500"
+                  loading="lazy" 
                 />
               </div>
-              <div className="p-4">
+              <div className="p-4 space-y-1">
                 <h3 className="text-sm font-semibold text-white leading-snug">{item.name}</h3>
+                {item.description && (
+                  <p className="text-xs text-muted font-mono leading-relaxed">{item.description}</p>
+                )}
               </div>
             </div>
           ))}
@@ -614,7 +804,7 @@ export default function App() {
             </p>
             <div className="space-y-2 font-mono text-sm text-slate-300">
               <p className="flex items-center gap-2">
-                <Mail size={16} className="text-primary" /> tiruamballa.it.@gmail.com
+                <Mail size={16} className="text-primary" /> tiruamballa.it@gmail.com
               </p>
               <p className="flex items-center gap-2">
                 <Linkedin size={16} className="text-primary" /> linkedin.com/in/amballa-tirumala-rao
@@ -623,6 +813,16 @@ export default function App() {
           </div>
 
           <form onSubmit={handleContactSubmit} className="space-y-4">
+            {/* Honeypot field for basic spam protection */}
+            <input 
+              type="text" 
+              name="botField" 
+              className="hidden" 
+              value={contactForm.botField}
+              onChange={(e) => setContactForm({ ...contactForm, botField: e.target.value })}
+              tabIndex="-1" 
+              autoComplete="off" 
+            />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="senderName" className="text-xs font-mono uppercase text-muted">Name</label>
               <input 
