@@ -34,7 +34,7 @@ export default function App() {
   const queryClient = useQueryClient()
 
   // Custom demo mode fallback when backend is unreachable/offline
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(localStorage.getItem('admin_token') === 'demo_jwt_token_auth_preset')
 
   // Auth headers
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
@@ -42,16 +42,8 @@ export default function App() {
   // 1. Authenticate login
   const handleLogin = (e) => {
     e.preventDefault()
-    if (loginCreds.username === 'tiruamballa' && loginCreds.password === '100207') {
-      // Permit local presentation access bypass
-      const fakeToken = "demo_jwt_token_auth_preset"
-      setToken(fakeToken)
-      localStorage.setItem('admin_token', fakeToken)
-      setIsDemoMode(true)
-      setLoginError('')
-      return
-    }
 
+    // Always attempt live backend login first
     axios.post(`${API_BASE}/auth/login`, loginCreds)
       .then(res => {
         const jwt = res.data.token
@@ -61,7 +53,16 @@ export default function App() {
         setLoginError('')
       })
       .catch(() => {
-        setLoginError('Invalid administrator credentials.')
+        // Fallback to local presentation demo mode if backend is down/unreachable
+        if (loginCreds.username === 'tiruamballa' && loginCreds.password === '100207') {
+          const fakeToken = "demo_jwt_token_auth_preset"
+          setToken(fakeToken)
+          localStorage.setItem('admin_token', fakeToken)
+          setIsDemoMode(true)
+          setLoginError('')
+        } else {
+          setLoginError('Invalid administrator credentials.')
+        }
       })
   }
 
