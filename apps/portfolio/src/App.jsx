@@ -370,6 +370,34 @@ export default function App() {
     }
   })
 
+  const trackClickEvent = (type, targetId) => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const device = isMobile ? 'Mobile' : 'Desktop';
+    let referrer = 'Direct';
+    if (document.referrer) {
+      if (document.referrer.includes('linkedin.com')) referrer = 'LinkedIn';
+      else if (document.referrer.includes('github.com')) referrer = 'GitHub';
+      else {
+        try {
+          referrer = new URL(document.referrer).hostname;
+        } catch(e) {
+          referrer = 'Other';
+        }
+      }
+    }
+    axios.post(`${API_BASE}/track-click`, {
+      type: type,
+      targetId: targetId,
+      device: device,
+      country: 'India',
+      referrer: referrer
+    }).catch(() => {});
+  }
+
+  React.useEffect(() => {
+    trackClickEvent('VISITOR', 'homepage-visit');
+  }, []);
+
   return (
     <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-8 space-y-16">
       {/* 1. Header Navigation */}
@@ -412,6 +440,7 @@ export default function App() {
             <a 
               href="/resume/tiru-resume-compressed.pdf" 
               download="Tiru_Amballa_Resume.pdf"
+              onClick={() => trackClickEvent('DOWNLOAD', 'resume-download')}
               className="px-6 py-3 rounded-sm border border-cardBorder hover:border-primary/50 bg-surface/50 text-slate-200 hover:text-white flex items-center gap-2 transition"
             >
               <FileDown size={16} />
@@ -579,6 +608,7 @@ export default function App() {
                         href={proj.githubUrl} 
                         target="_blank" 
                         rel="noreferrer"
+                        onClick={() => trackClickEvent('CLICK', `project-${proj.title.toLowerCase().replace(/\s+/g, '-')}-github`)}
                         className="p-1.5 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition flex items-center justify-center"
                         title="Repository"
                       >
@@ -589,6 +619,7 @@ export default function App() {
                           href={proj.demoUrl} 
                           target="_blank" 
                           rel="noreferrer"
+                          onClick={() => trackClickEvent('CLICK', `project-${proj.title.toLowerCase().replace(/\s+/g, '-')}-demo`)}
                           className="p-1.5 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition flex items-center justify-center"
                           title="Live Demo"
                         >

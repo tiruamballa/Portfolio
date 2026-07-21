@@ -39,8 +39,8 @@ public class AuthController {
 
     @PostConstruct
     public void initDefaultAdmin() {
-        if (adminRepository.count() == 0) {
-            Admin defaultAdmin = new Admin("admin", passwordEncoder.encode("password"), "ADMIN");
+        if (adminRepository.findByUsername("tiruamballa").isEmpty()) {
+            Admin defaultAdmin = new Admin("tiruamballa", passwordEncoder.encode("100207"), "ADMIN");
             adminRepository.save(defaultAdmin);
         }
     }
