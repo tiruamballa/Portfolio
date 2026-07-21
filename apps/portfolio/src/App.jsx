@@ -52,6 +52,20 @@ const getProjectImage = (title) => {
   return "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=512&q=80";
 }
 
+const getCertificationLink = (name, verifyLink) => {
+  const n = name.toLowerCase();
+  if (n.includes('sql') || n.includes('ibm')) return '/certifiactions/sql-ibm-certificate.pdf';
+  if (n.includes('python essentials 1') || (n.includes('python') && n.includes('1'))) return '/certifiactions/PythonEssentials1.pdf';
+  if (n.includes('python essentials 2') || (n.includes('python') && n.includes('2'))) return '/certifiactions/PythonEssentials2.pdf';
+  if (n.includes('c programming level 1') || (n.includes('c') && n.includes('1'))) return '/certifiactions/CEssentials1.pdf';
+  if (n.includes('c programming level 2') || (n.includes('c') && n.includes('2'))) return '/certifiactions/CEssentials2.pdf';
+  if (n.includes('ai tools') || n.includes('be10x')) return '/certifiactions/AI-tools-be10x.pdf';
+  if (n.includes('prompt')) return '/certifiactions/prompt-engineering.pdf';
+  
+  if (verifyLink && verifyLink.startsWith('/certifiactions/')) return verifyLink;
+  return verifyLink || '#';
+}
+
 // Fallback Data to ensure the portfolio works out-of-the-box
 const FALLBACK_DATA = {
   settings: {
@@ -687,18 +701,14 @@ export default function App() {
                 <p className="text-xs text-muted mt-1">{cert.organization} — {cert.issueDate}</p>
               </div>
               <div className="flex justify-end items-center pt-2 border-t border-cardBorder/30 w-full">
-                {cert.verifyLink ? (
-                  <a 
-                    href={cert.verifyLink} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="text-xs text-primary hover:text-white flex items-center gap-1 font-mono transition"
-                  >
-                    View Certificate <ExternalLink size={12} />
-                  </a>
-                ) : (
-                  <span className="text-xs text-muted font-mono">Record Logged</span>
-                )}
+                <a 
+                  href={getCertificationLink(cert.name, cert.verifyLink)} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-xs text-primary hover:text-white flex items-center gap-1 font-mono transition"
+                >
+                  View Certificate <ExternalLink size={12} />
+                </a>
               </div>
             </div>
           ))}
