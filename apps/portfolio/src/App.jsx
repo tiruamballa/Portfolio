@@ -64,7 +64,7 @@ const FALLBACK_DATA = {
   projects: [
     {
       id: 1,
-      title: "JeevMitra Healthcare App",
+      title: "JeevMitra",
       description: "A complete healthcare portal designed to connect patients, pharmacies, and observers into a cohesive digital ecosystem to track medication adherence.",
       githubUrl: "https://github.com/tiruamballa/JeevMitra",
       demoUrl: "#",
@@ -160,36 +160,31 @@ const FALLBACK_DATA = {
       name: "IBM SQL Certification", 
       organization: "IBM Skills Network", 
       issueDate: "2024", 
-      verifyLink: "https://www.credly.com/badges/db4e1d70-7467-4226-bf75-80271c668ad7", /* TODO: Verify or update Credly verify link if different */
-      downloadLink: "/certifiactions/sql-ibm-certificate.pdf" 
+      verifyLink: "/certifiactions/sql-ibm-certificate.pdf"
     },
     { 
       name: "Cisco Python Essentials 1", 
       organization: "Cisco Networking Academy", 
       issueDate: "2025", 
-      verifyLink: "https://www.credly.com/org/cisco/badge/python-essentials-1", /* TODO: Verify or update Credly verify link */
-      downloadLink: "/certifiactions/PythonEssentials1.pdf" 
+      verifyLink: "/certifiactions/PythonEssentials1.pdf"
     },
     { 
       name: "Cisco Python Essentials 2", 
       organization: "Cisco Networking Academy", 
       issueDate: "2025", 
-      verifyLink: "https://www.credly.com/org/cisco/badge/python-essentials-2", /* TODO: Verify or update Credly verify link */
-      downloadLink: "/certifiactions/PythonEssentials2.pdf" 
+      verifyLink: "/certifiactions/PythonEssentials2.pdf"
     },
     { 
       name: "C Programming Level 1", 
       organization: "Cisco Networking Academy / OpenEDG", 
       issueDate: "2025", 
-      verifyLink: "https://verify.edube.org/", /* TODO: Verify or update Edube verification link */
-      downloadLink: "/certifiactions/CEssentials1.pdf" 
+      verifyLink: "/certifiactions/CEssentials1.pdf"
     },
     { 
       name: "C Programming Level 2", 
       organization: "Cisco Networking Academy / OpenEDG", 
       issueDate: "2025", 
-      verifyLink: "https://verify.edube.org/", /* TODO: Verify or update Edube verification link */
-      downloadLink: "/certifiactions/CEssentials2.pdf" 
+      verifyLink: "/certifiactions/CEssentials2.pdf"
     }
   ],
   volunteering: [
@@ -691,7 +686,7 @@ export default function App() {
                 </h3>
                 <p className="text-xs text-muted mt-1">{cert.organization} — {cert.issueDate}</p>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-cardBorder/30">
+              <div className="flex justify-end items-center pt-2 border-t border-cardBorder/30 w-full">
                 {cert.verifyLink ? (
                   <a 
                     href={cert.verifyLink} 
@@ -699,20 +694,10 @@ export default function App() {
                     rel="noreferrer"
                     className="text-xs text-primary hover:text-white flex items-center gap-1 font-mono transition"
                   >
-                    Verify Online <ExternalLink size={12} />
+                    View Certificate <ExternalLink size={12} />
                   </a>
                 ) : (
                   <span className="text-xs text-muted font-mono">Record Logged</span>
-                )}
-                {cert.downloadLink && (
-                  <a 
-                    href={cert.downloadLink} 
-                    download
-                    className="p-1 border border-cardBorder hover:border-primary rounded-sm bg-background hover:bg-primary/10 text-muted hover:text-white transition flex items-center gap-1.5 text-xs font-mono"
-                    title="Download PDF Copy"
-                  >
-                    <FileDown size={12} /> PDF
-                  </a>
                 )}
               </div>
             </div>
