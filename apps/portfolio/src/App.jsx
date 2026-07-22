@@ -19,7 +19,8 @@ import {
   Lock,
   Cpu,
   Code,
-  Heart
+  Heart,
+  FileText
 } from 'lucide-react'
 
 // Base REST API Configurations
@@ -49,6 +50,7 @@ const getProjectImage = (title) => {
   if (t.includes('atr')) return '/images/projects/atr.png';
   if (t.includes('quizlive')) return '/images/projects/quizlive.png';
   if (t.includes('arogyacare')) return '/images/projects/arogyacare.png';
+  if (t.includes('portfolio') || t.includes('cms')) return '/images/projects/portfolio-cms.png';
   return "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=512&q=80";
 }
 
@@ -127,6 +129,19 @@ const FALLBACK_DATA = {
       featured: true,
       image: "/images/projects/arogyacare.png",
       skillsUsed: [{ name: "Python" }, { name: "Django" }, { name: "Gemini API" }]
+    },
+    {
+      id: 5,
+      title: "Portfolio CMS Console",
+      description: "A custom developer portfolio website and Content Management System (CMS) featuring Spring Security JWT authentication, real-time visitor tracking, database telemetry logging, and visual admin dashboards.",
+      githubUrl: "https://github.com/tiruamballa/Portfolio",
+      demoUrl: "https://tiruportfolio.vercel.app",
+      challenges: "Securing dashboard write operations via JWT filters, tracking user locations, and rendering markdown walkthroughs.",
+      features: "Spring Security, traffic log telemetry, message inbox alerts, interactive console widgets.",
+      statusEnum: "COMPLETED",
+      featured: true,
+      image: "/images/projects/portfolio-cms.png",
+      skillsUsed: [{ name: "Java" }, { name: "Spring Boot" }, { name: "React" }, { name: "MySQL" }]
     }
   ],
   skills: [
@@ -640,51 +655,92 @@ export default function App() {
 
       {/* Project Case Study Dossier Modal */}
       {selectedProject && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedProject(null)}>
-          <div className="bg-surface border border-cardBorder rounded-lg max-w-[650px] w-full p-6 space-y-6 overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-start border-b border-cardBorder pb-4">
+        <div className="fixed inset-0 z-50 bg-[#0F1115]/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedProject(null)}>
+          <div className="bg-[#181C23] border border-[#252B35] rounded-lg max-w-[900px] w-full p-6 space-y-6 overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start border-b border-[#252B35] pb-4">
               <div>
                 <h3 className="font-display text-2xl font-bold text-white">{selectedProject.title}</h3>
                 <p className="text-xs text-accent font-mono mt-1">Status: {selectedProject.statusEnum}</p>
               </div>
               <button 
-                className="text-muted hover:text-white font-mono text-lg"
+                className="text-muted hover:text-white font-mono text-lg transition"
                 onClick={() => setSelectedProject(null)}
               >
                 ✕
               </button>
             </div>
             
-            <div className="space-y-4">
-              <div>
-                <span className="text-xs text-primary uppercase font-mono tracking-wider">Overview</span>
-                <p className="text-sm text-slate-300 leading-relaxed mt-1">{selectedProject.description}</p>
-              </div>
-              
-              <div>
-                <span className="text-xs text-primary uppercase font-mono tracking-wider">Features</span>
-                <p className="text-sm text-slate-300 leading-relaxed mt-1">{selectedProject.features}</p>
+            {/* Split Screen Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+              {/* Left Column: Image mockup */}
+              <div className="h-64 md:h-[350px] w-full overflow-hidden bg-background border border-cardBorder/30 rounded-md relative flex items-center justify-center">
+                <img 
+                  src={getProjectImage(selectedProject.title)} 
+                  alt={selectedProject.title} 
+                  onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=512&q=80" }}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+                />
               </div>
 
-              <div>
-                <span className="text-xs text-primary uppercase font-mono tracking-wider">Engineering Challenges</span>
-                <p className="text-sm text-slate-300 leading-relaxed mt-1">{selectedProject.challenges}</p>
+              {/* Right Column: Case Study Details */}
+              <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 flex flex-col justify-start">
+                <div>
+                  <span className="text-xs text-primary uppercase font-mono tracking-wider">Overview</span>
+                  <p className="text-sm text-slate-300 leading-relaxed mt-1">{selectedProject.description}</p>
+                </div>
+                
+                {selectedProject.features && (
+                  <div>
+                    <span className="text-xs text-primary uppercase font-mono tracking-wider">Key Features</span>
+                    <p className="text-sm text-slate-300 leading-relaxed mt-1">{selectedProject.features}</p>
+                  </div>
+                )}
+                
+                {selectedProject.challenges && (
+                  <div>
+                    <span className="text-xs text-primary uppercase font-mono tracking-wider">Engineering Challenges</span>
+                    <p className="text-sm text-slate-300 leading-relaxed mt-1">{selectedProject.challenges}</p>
+                  </div>
+                )}
+
+                {selectedProject.skillsUsed && selectedProject.skillsUsed.length > 0 && (
+                  <div>
+                    <span className="text-xs text-primary uppercase font-mono tracking-wider">Tech Stack</span>
+                    <div className="flex flex-wrap gap-2 mt-1.5">
+                      {selectedProject.skillsUsed.map((sk, index) => (
+                        <span key={index} className="text-xs text-muted font-mono px-2 py-0.5 bg-background border border-cardBorder rounded-sm">{sk.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4 border-t border-cardBorder/30">
+            <div className="flex flex-wrap gap-4 pt-4 border-t border-cardBorder/30">
               <a 
                 href={selectedProject.githubUrl} 
                 target="_blank" 
-                className="flex-1 py-2 text-center rounded-sm bg-primary text-white font-semibold hover:bg-primary/90 flex items-center justify-center gap-2 transition"
+                rel="noreferrer"
+                className="flex-grow min-w-[120px] py-2 text-center rounded-sm bg-primary text-white font-semibold hover:bg-primary/90 flex items-center justify-center gap-2 transition"
               >
                 <Github size={16} /> Repository
               </a>
+              {selectedProject.githubUrl && selectedProject.githubUrl !== '#' && (
+                <a 
+                  href={`${selectedProject.githubUrl}#readme`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex-grow min-w-[120px] py-2 text-center rounded-sm border border-cardBorder hover:border-primary text-slate-200 font-semibold flex items-center justify-center gap-2 transition"
+                >
+                  <FileText size={16} /> Readme.md
+                </a>
+              )}
               {selectedProject.demoUrl && selectedProject.demoUrl !== '#' && (
                 <a 
                   href={selectedProject.demoUrl} 
                   target="_blank" 
-                  className="flex-1 py-2 text-center rounded-sm border border-cardBorder text-slate-200 font-semibold hover:border-accent hover:text-white flex items-center justify-center gap-2 transition"
+                  rel="noreferrer"
+                  className="flex-grow min-w-[120px] py-2 text-center rounded-sm border border-cardBorder text-slate-200 font-semibold hover:border-accent hover:text-white flex items-center justify-center gap-2 transition"
                 >
                   <ExternalLink size={16} /> Live Demo
                 </a>

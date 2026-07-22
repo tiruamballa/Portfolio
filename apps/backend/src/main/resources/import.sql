@@ -11,14 +11,20 @@ INSERT INTO project (title, description, github_url, demo_url, challenges, featu
 INSERT INTO project (title, description, github_url, demo_url, challenges, features, featured, display_order, status_enum) VALUES ('ATR Operating System', 'A custom-built operating system mapping career execution pathways, streaks, and university attendance tracking for engineering students.', 'https://github.com/tiruamballa/ATR', '#', 'Processing dynamic streak increments based on task weights.', 'Execution checklists, attendance buffer calculators, LeetCode metrics.', true, 2, 'IN_PROGRESS');
 INSERT INTO project (title, description, github_url, demo_url, challenges, features, featured, display_order, status_enum) VALUES ('QuizLive', 'An interactive, real-time multi-user quiz streaming platform powered by WebSockets to synchronize quiz timers and manage concurrent user session data.', 'https://github.com/tiruamballa/quizlive.errorists', '#', 'Synchronizing quiz timelines and state transitions across socket connections.', 'Real-time leaderboards, session score metrics, quiz widgets.', true, 3, 'COMPLETED');
 INSERT INTO project (title, description, github_url, demo_url, challenges, features, featured, display_order, status_enum) VALUES ('ArogyaCare AI Assistant', 'A multilingual AI-powered healthcare assistant chatbot utilizing retrieval-augmented generation (RAG) and Gemini API integration for localized medical consulting.', 'https://github.com/tiruamballa/Arogyacare', '#', 'Structuring context injection guardrails for safety and retaining chat history.', 'RAG medical databases, language translations, Gemini prompt pipelines.', true, 4, 'COMPLETED');
+INSERT INTO project (title, description, github_url, demo_url, challenges, features, featured, display_order, status_enum) VALUES ('Portfolio CMS Console', 'A custom developer portfolio website and Content Management System (CMS) featuring Spring Security JWT authentication, real-time visitor tracking, database telemetry logging, and visual admin dashboards.', 'https://github.com/tiruamballa/Portfolio', 'https://tiruportfolio.vercel.app', 'Securing dashboard write operations via JWT filters, tracking user locations, and rendering markdown walkthroughs.', 'Spring Security, traffic log telemetry, message inbox alerts, interactive console widgets.', true, 5, 'COMPLETED');
 
 -- Prepopulate Project Skill relations
 INSERT INTO project_skill (project_id, skill_id) VALUES (1, 1); -- JeevMitra uses Java
-INSERT INTO project_skill (project_id, skill_id) VALUES (1, 5); -- JeevMitra uses Spring Boot
+INSERT INTO project_skill (project_id, skill_id) VALUES (1, 4); -- JeevMitra uses Spring Boot
 INSERT INTO project_skill (project_id, skill_id) VALUES (2, 1); -- ATR uses Java
-INSERT INTO project_skill (project_id, skill_id) VALUES (2, 5); -- ATR uses Spring Boot
+INSERT INTO project_skill (project_id, skill_id) VALUES (2, 4); -- ATR uses Spring Boot
 INSERT INTO project_skill (project_id, skill_id) VALUES (3, 3); -- QuizLive uses Python
 INSERT INTO project_skill (project_id, skill_id) VALUES (4, 3); -- ArogyaCare uses Python
+INSERT INTO project_skill (project_id, skill_id) VALUES (5, 1); -- Portfolio CMS uses Java
+INSERT INTO project_skill (project_id, skill_id) VALUES (5, 4); -- Portfolio CMS uses Spring Boot
+INSERT INTO project_skill (project_id, skill_id) VALUES (5, 2); -- Portfolio CMS uses JavaScript
+INSERT INTO project_skill (project_id, skill_id) VALUES (5, 5); -- Portfolio CMS uses React
+
 
 -- Prepopulate Certifications
 INSERT INTO certification (name, organization, issue_date, credential_id, verify_link, display_order) VALUES ('IBM SQL Certification', 'IBM Skills Network', '2024-06-15', 'IBM-SQL-9872', '/certifiactions/sql-ibm-certificate.pdf', 1);

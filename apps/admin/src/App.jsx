@@ -85,8 +85,11 @@ export default function App() {
     queryFn: () => axios.get(`${API_BASE}/public/projects`).then(res => res.data),
     enabled: !!token,
     initialData: [
-      { id: 1, title: "JeevMitra", description: "Healthcare ecosystem.", githubUrl: "https://github.com/tiruamballa/JeevMitra", demoUrl: "#", challenges: "Sync logs", features: "POS billing", statusEnum: "COMPLETED", featured: true },
-      { id: 2, title: "ATR Operating System", description: "Streak tracking tracker.", githubUrl: "https://github.com/tiruamballa/ATR", demoUrl: "#", challenges: "Streak logic", features: "Attendance recover", statusEnum: "IN_PROGRESS", featured: true }
+      { id: 1, title: "JeevMitra", statusEnum: "COMPLETED", featured: true },
+      { id: 2, title: "ATR Operating System", statusEnum: "IN_PROGRESS", featured: true },
+      { id: 3, title: "QuizLive", statusEnum: "COMPLETED", featured: true },
+      { id: 4, title: "ArogyaCare AI Assistant", statusEnum: "COMPLETED", featured: true },
+      { id: 5, title: "Portfolio CMS Console", statusEnum: "COMPLETED", featured: true }
     ]
   })
 
