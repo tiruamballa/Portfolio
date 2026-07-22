@@ -84,6 +84,7 @@ const FALLBACK_DATA = {
       description: "A complete healthcare portal designed to connect patients, pharmacies, and observers into a cohesive digital ecosystem to track medication adherence.",
       githubUrl: "https://github.com/tiruamballa/JeevMitra",
       demoUrl: "#",
+      readmeLink: "https://github.com/tiruamballa/JeevMitra#readme",
       challenges: "Synchronizing high-frequency observer notifications and computing real-time gamified compliance metrics.",
       features: "DoseTrack checklists, JeevScore compliance index, observer portals, POS billing terminals.",
       statusEnum: "COMPLETED",
@@ -97,6 +98,7 @@ const FALLBACK_DATA = {
       description: "A custom-built operating system mapping career execution pathways, streaks, and university attendance tracking for engineering students.",
       githubUrl: "https://github.com/tiruamballa/ATR",
       demoUrl: "#",
+      readmeLink: "https://github.com/tiruamballa/ATR#readme",
       challenges: "Processing dynamic streak increments based on task weights and calculating recovery timelines.",
       features: "Execution dashboards, attendance recovery buffer algorithms, LeetCode target metrics.",
       statusEnum: "IN_PROGRESS",
@@ -110,6 +112,7 @@ const FALLBACK_DATA = {
       description: "An interactive, real-time multi-user quiz streaming platform powered by WebSockets to synchronize quiz timers and manage concurrent user session data.",
       githubUrl: "https://github.com/tiruamballa/quizlive.errorists",
       demoUrl: "#",
+      readmeLink: "https://github.com/tiruamballa/quizlive.errorists#readme",
       challenges: "Synchronizing quiz timelines and state transitions across hundreds of socket connections without frame drop.",
       features: "Real-time leaderboards, session score metrics, responsive quiz dashboards.",
       statusEnum: "COMPLETED",
@@ -123,6 +126,7 @@ const FALLBACK_DATA = {
       description: "A multilingual AI-powered healthcare assistant chatbot utilizing retrieval-augmented generation (RAG) and Gemini API integration for localized medical consulting.",
       githubUrl: "https://github.com/tiruamballa/Arogyacare",
       demoUrl: "#",
+      readmeLink: "https://github.com/tiruamballa/Arogyacare#readme",
       challenges: "Structuring context injection guardrails for safety and retaining chat history across sessions.",
       features: "RAG medical databases, localized language translations, Gemini prompt pipelines.",
       statusEnum: "COMPLETED",
@@ -136,6 +140,7 @@ const FALLBACK_DATA = {
       description: "A custom developer portfolio website and Content Management System (CMS) featuring Spring Security JWT authentication, real-time visitor tracking, database telemetry logging, and visual admin dashboards.",
       githubUrl: "https://github.com/tiruamballa/Portfolio",
       demoUrl: "https://tiruportfolio.vercel.app",
+      readmeLink: "https://github.com/tiruamballa/Portfolio#readme",
       challenges: "Securing dashboard write operations via JWT filters, tracking user locations, and rendering markdown walkthroughs.",
       features: "Spring Security, traffic log telemetry, message inbox alerts, interactive console widgets.",
       statusEnum: "COMPLETED",
@@ -725,7 +730,16 @@ export default function App() {
               >
                 <Github size={16} /> Repository
               </a>
-              {selectedProject.githubUrl && selectedProject.githubUrl !== '#' && (
+              {selectedProject.readmeLink ? (
+                <a 
+                  href={selectedProject.readmeLink}
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex-grow min-w-[120px] py-2 text-center rounded-sm border border-cardBorder hover:border-primary text-slate-200 font-semibold flex items-center justify-center gap-2 transition"
+                >
+                  <FileText size={16} /> Readme.md
+                </a>
+              ) : selectedProject.githubUrl && selectedProject.githubUrl !== '#' ? (
                 <a 
                   href={`${selectedProject.githubUrl}#readme`}
                   target="_blank" 
@@ -734,7 +748,7 @@ export default function App() {
                 >
                   <FileText size={16} /> Readme.md
                 </a>
-              )}
+              ) : null}
               {selectedProject.demoUrl && selectedProject.demoUrl !== '#' && (
                 <a 
                   href={selectedProject.demoUrl} 

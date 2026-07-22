@@ -476,7 +476,7 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-end">
               <button 
-                onClick={() => setProjectModal({ title: '', description: '', githubUrl: '', demoUrl: '', challenges: '', features: '', featured: false, displayOrder: 0, statusEnum: 'PLANNING' })}
+                onClick={() => setProjectModal({ title: '', description: '', githubUrl: '', demoUrl: '', readmeLink: '', challenges: '', features: '', featured: false, displayOrder: 0, statusEnum: 'PLANNING' })}
                 className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10"
               >
                 <PlusCircle size={14} /> Add Project Profile
@@ -813,7 +813,7 @@ export default function App() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">GitHub Repository URL</label>
                   <input 
@@ -821,6 +821,15 @@ export default function App() {
                     className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
                     value={projectModal.githubUrl}
                     onChange={(e) => setProjectModal({...projectModal, githubUrl: e.target.value})}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-mono uppercase text-slate-400">README Link</label>
+                  <input 
+                    type="text" placeholder="https://github.com/...#readme"
+                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    value={projectModal.readmeLink || ''}
+                    onChange={(e) => setProjectModal({...projectModal, readmeLink: e.target.value})}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">

@@ -17,6 +17,7 @@ public class Project {
     
     private String githubUrl;
     private String demoUrl;
+    private String readmeLink;
 
     @Column(columnDefinition = "TEXT")
     private String challenges;
@@ -70,4 +71,7 @@ public class Project {
 
     public Set<Skill> getSkillsUsed() { return skillsUsed; }
     public void setSkillsUsed(Set<Skill> skillsUsed) { this.skillsUsed = skillsUsed; }
+
+    public String getReadmeLink() { return readmeLink; }
+    public void setReadmeLink(String readmeLink) { this.readmeLink = readmeLink; }
 }
