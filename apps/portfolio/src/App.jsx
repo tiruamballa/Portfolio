@@ -252,36 +252,38 @@ const FALLBACK_DATA = {
 export default function App() {
   // State declarations
 
-  // Query hooks
-  const { data: settings } = useQuery({
+  // Query hooks with error detection
+  const { data: settings, isError: settingsError } = useQuery({
     queryKey: ['settings'],
     queryFn: () => axios.get(`${API_BASE}/settings`).then(res => res.data),
     initialData: FALLBACK_DATA.settings
   })
 
-  const { data: projects } = useQuery({
+  const { data: projects, isError: projectsError } = useQuery({
     queryKey: ['projects'],
     queryFn: () => axios.get(`${API_BASE}/projects`).then(res => res.data),
     initialData: FALLBACK_DATA.projects
   })
 
-  const { data: skills } = useQuery({
+  const { data: skills, isError: skillsError } = useQuery({
     queryKey: ['skills'],
     queryFn: () => axios.get(`${API_BASE}/skills`).then(res => res.data),
     initialData: FALLBACK_DATA.skills
   })
 
-  const { data: experience } = useQuery({
+  const { data: experience, isError: experienceError } = useQuery({
     queryKey: ['experience'],
     queryFn: () => axios.get(`${API_BASE}/experience`).then(res => res.data),
     initialData: FALLBACK_DATA.experience
   })
 
-  const { data: certifications } = useQuery({
+  const { data: certifications, isError: certificationsError } = useQuery({
     queryKey: ['certifications'],
     queryFn: () => axios.get(`${API_BASE}/certifications`).then(res => res.data),
     initialData: FALLBACK_DATA.certifications
   })
+
+  const isBackendOffline = settingsError || projectsError || skillsError || experienceError || certificationsError
 
   // Contact submit validation with honeypot spam protection
   const handleContactSubmit = (e) => {
@@ -420,6 +422,13 @@ export default function App() {
 
   return (
     <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-8 space-y-16">
+      {isBackendOffline && (
+        <div className="bg-[#EF4444]/5 border border-[#EF4444]/20 rounded-md px-4 py-2 flex items-center justify-between gap-4 font-mono text-xs text-[#F87171] animate-[pulse_3s_infinite]">
+          <span>⚠️ Live database connection offline (Render server is sleeping or starting up). Displaying cached records.</span>
+          <span className="opacity-65">[Offline Sandbox Mode]</span>
+        </div>
+      )}
+
       {/* 1. Header Navigation */}
       <header className="sticky top-0 z-50 backdrop-blur-md border-b border-cardBorder py-4 flex items-center justify-between">
         <a href="#" className="font-display font-bold text-lg text-primary tracking-wider">tiru.dev</a>
