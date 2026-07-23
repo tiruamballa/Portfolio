@@ -7,7 +7,7 @@ spring:
       max-request-size: 10MB
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 jwt:
   secret: 9a67471a79d3d3a778e82ef45b74681617e82ef45b74681617e82ef45b746816
