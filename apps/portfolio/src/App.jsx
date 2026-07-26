@@ -68,6 +68,20 @@ const getCertificationLink = (name, verifyLink) => {
   return verifyLink || '#';
 }
 
+const TypewriterText = ({ text }) => {
+  const [displayedText, setDisplayedText] = useState('')
+  useEffect(() => {
+    let index = 0;
+    const interval = setInterval(() => {
+      setDisplayedText((prev) => prev + text.charAt(index));
+      index++;
+      if (index >= text.length) clearInterval(interval);
+    }, 12);
+    return () => clearInterval(interval);
+  }, [text])
+  return <span>{displayedText}</span>
+}
+
 // Fallback Data to ensure the portfolio works out-of-the-box
 const FALLBACK_DATA = {
   settings: {
@@ -420,6 +434,25 @@ export default function App() {
     trackClickEvent('VISITOR', 'homepage-visit');
   }, []);
 
+  // Dynamic spotlight card mouse-tracking effect (cursor-following glow)
+  React.useEffect(() => {
+    // Disable effect on touch/mobile devices
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+
+    const handleMouseMove = (e) => {
+      const card = e.target.closest('.spotlight-card');
+      if (!card) return;
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
     <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-8 space-y-16">
       {isBackendOffline && (
@@ -456,7 +489,7 @@ export default function App() {
             <MapPin size={14} className="text-accent" />
             <span className="text-xs text-accent font-mono">{settings.location || FALLBACK_DATA.settings.location}</span>
           </div>
-          <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight max-w-[900px]">
+          <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight max-w-[900px]">
             {settings.heroHeadline || FALLBACK_DATA.settings.heroHeadline}
           </h1>
           <p className="text-lg text-muted max-w-[680px]">
@@ -603,7 +636,7 @@ export default function App() {
           {projects.map((proj) => (
             <div 
               key={proj.id} 
-              className="bg-surface border border-cardBorder rounded-md overflow-hidden flex flex-col justify-between cursor-pointer premium-card spotlight-card"
+              className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-md overflow-hidden flex flex-col justify-between cursor-pointer premium-card spotlight-card shadow-2xl"
               onClick={() => setSelectedProject(proj)}
             >
               {/* Project Image Header */}
@@ -670,7 +703,7 @@ export default function App() {
       {/* Project Case Study Dossier Modal */}
       {selectedProject && (
         <div className="fixed inset-0 z-50 bg-[#0F1115]/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedProject(null)}>
-          <div className="bg-[#181C23] border border-[#252B35] rounded-lg max-w-[900px] w-full p-6 space-y-6 overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800/80 rounded-lg max-w-[900px] w-full p-6 space-y-6 overflow-y-auto max-h-[90vh] shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-start border-b border-[#252B35] pb-4">
               <div>
                 <h3 className="font-display text-2xl font-bold text-white">{selectedProject.title}</h3>
@@ -802,7 +835,7 @@ export default function App() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {certifications.map((cert, idx) => (
-            <div key={idx} className="bg-surface border border-cardBorder p-5 rounded-md flex flex-col justify-between gap-4 premium-card spotlight-card">
+            <div key={idx} className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 rounded-md flex flex-col justify-between gap-4 premium-card spotlight-card shadow-2xl">
               <div>
                 <h3 className="text-sm font-bold text-white leading-snug flex items-center gap-2">
                   <CheckCircle className="text-primary w-4 h-4 flex-shrink-0" />
@@ -832,12 +865,12 @@ export default function App() {
           Terminal Console
         </h2>
         <div className="bg-surface border border-cardBorder p-5 rounded-md font-mono text-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-cardBorder/30 pb-2">
+          <div className="flex items-center justify-between border-b border-cardBorder/30 pb-2 group/window">
             <span className="text-xs text-muted flex items-center gap-2"><TermIcon size={14} /> terminal.sh</span>
             <div className="flex gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-700 transition-colors duration-200 group-hover/window:bg-[#EF4444]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-700 transition-colors duration-200 group-hover/window:bg-[#F59E0B]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-700 transition-colors duration-200 group-hover/window:bg-[#10B981]" />
             </div>
           </div>
           
@@ -847,7 +880,7 @@ export default function App() {
                 key={index} 
                 className={log.type === 'user' ? 'text-primary' : 'text-slate-300'}
               >
-                {log.text}
+                {log.type === 'user' ? log.text : <TypewriterText text={log.text} />}
               </p>
             ))}
           </div>

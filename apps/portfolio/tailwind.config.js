@@ -17,7 +17,7 @@ export default {
         cardBorderHover: 'rgba(59, 130, 246, 0.25)',
       },
       fontFamily: {
-        display: ['Inter', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
         sans: ['Inter', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },

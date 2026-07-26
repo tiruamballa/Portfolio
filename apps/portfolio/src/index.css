@@ -38,9 +38,9 @@
   position: absolute;
   inset: 0px;
   background: radial-gradient(
-    circle at center,
-    rgba(59, 130, 246, 0.06),
-    transparent 70%
+    circle 150px at var(--mouse-x, center) var(--mouse-y, center),
+    rgba(59, 130, 246, 0.08),
+    transparent 80%
   );
   z-index: 1;
   pointer-events: none;
@@ -49,8 +49,10 @@
   transition: opacity 0.25s ease-out;
 }
 
-.spotlight-card:hover::before {
-  opacity: 1;
+@media (hover: hover) {
+  .spotlight-card:hover::before {
+    opacity: 1;
+  }
 }
 
 .premium-card {
