@@ -71,20 +71,27 @@ export default function App() {
     const errors = {}
     const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/
     
+    const isValidUrlOrPath = (val) => {
+      if (!val) return true
+      if (val === '#') return true
+      if (val.startsWith('/')) return true
+      return urlPattern.test(val)
+    }
+
     if (type === 'project') {
       if (!data.title?.trim()) errors.title = 'Project title is required'
       if (!data.description?.trim()) errors.description = 'Description is required'
       if (data.githubUrl && !urlPattern.test(data.githubUrl)) errors.githubUrl = 'Invalid URL format'
-      if (data.demoUrl && !urlPattern.test(data.demoUrl)) errors.demoUrl = 'Invalid URL format'
-      if (data.readmeLink && !urlPattern.test(data.readmeLink)) errors.readmeLink = 'Invalid URL format'
+      if (data.demoUrl && !isValidUrlOrPath(data.demoUrl)) errors.demoUrl = 'Invalid URL format (must be full URL, local path, or #)'
+      if (data.readmeLink && !isValidUrlOrPath(data.readmeLink)) errors.readmeLink = 'Invalid URL format (must be full URL, local path, or #)'
     } else if (type === 'skill') {
       if (!data.name?.trim()) errors.name = 'Skill name is required'
       if (!data.experienceLevel?.trim()) errors.experienceLevel = 'Experience level is required'
     } else if (type === 'cert') {
       if (!data.name?.trim()) errors.name = 'Certification name is required'
       if (!data.organization?.trim()) errors.organization = 'Issuing organization is required'
-      if (!data.issueDate?.trim()) errors.issueDate = 'Issue date/year is required'
-      if (data.verifyLink && !urlPattern.test(data.verifyLink)) errors.verifyLink = 'Invalid URL format (must be full URL or valid path)'
+      if (!data.issueDate?.trim()) errors.issueDate = 'Issue date is required'
+      if (data.verifyLink && !isValidUrlOrPath(data.verifyLink)) errors.verifyLink = 'Invalid URL format (must be full URL or local path)'
     } else if (type === 'exp') {
       if (!data.company?.trim()) errors.company = 'Company name is required'
       if (!data.role?.trim()) errors.role = 'Role title is required'
