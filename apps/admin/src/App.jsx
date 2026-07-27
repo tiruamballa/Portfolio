@@ -67,6 +67,45 @@ export default function App() {
   // Form Validation
   const [formErrors, setFormErrors] = useState({})
 
+  // File Uploading state & handler
+  const [isUploadingFile, setIsUploadingFile] = useState(false)
+  const handleCertificateFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setIsUploadingFile(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('altText', `Certificate - ${certModal?.name || 'Uploaded File'}`)
+
+    try {
+      let res;
+      if (isDemoMode) {
+        const fakeUrl = `/uploads/mock-${Date.now()}-${file.name}`
+        res = { data: { id: 999, url: fakeUrl, fileName: file.name } }
+        showToast('Demo Mode: File upload simulated locally!', 'info')
+      } else {
+        res = await axios.post(`${API_BASE}/admin/media/upload`, formData, {
+          headers: {
+            ...authHeaders.headers,
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        showToast('Certificate PDF uploaded successfully!', 'success')
+      }
+
+      setCertModal(prev => ({
+        ...prev,
+        verifyLink: res.data.url,
+        pdfMedia: res.data
+      }))
+    } catch (err) {
+      showToast(`Upload failed: ${err.response?.data || err.message}`, 'error')
+    } finally {
+      setIsUploadingFile(false)
+    }
+  }
+
   const validateForm = (type, data) => {
     const errors = {}
     const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/
@@ -1422,9 +1461,25 @@ export default function App() {
               </div>
 
               <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-mono uppercase text-slate-400">Upload Certificate File (PDF / Image)</label>
+                <div className="flex gap-3 items-center">
+                  <input 
+                    type="file" 
+                    accept=".pdf,image/*" 
+                    onChange={handleCertificateFileUpload}
+                    disabled={isUploadingFile}
+                    className="text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#0F1115] file:text-blue-500 hover:file:bg-[#181C23] file:cursor-pointer cursor-pointer border border-[#252B35] rounded-md px-3 py-1 bg-[#0F1115] flex-1 focus:outline-none"
+                  />
+                  {isUploadingFile && (
+                    <span className="text-xs font-mono text-blue-500 animate-pulse">Uploading...</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-mono uppercase text-slate-400">Local Certificate Path</label>
                 <input 
-                  type="text" placeholder="/certifiactions/..."
+                  type="text" placeholder="/certifiactions/... or https://..."
                   className={`bg-[#0F1115] border ${formErrors.verifyLink ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none font-mono`}
                   value={certModal.verifyLink || ''}
                   onChange={(e) => setCertModal({...certModal, verifyLink: e.target.value})}
