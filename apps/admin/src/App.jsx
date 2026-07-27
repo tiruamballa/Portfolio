@@ -1394,9 +1394,9 @@ export default function App() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-mono uppercase text-slate-400">Issue Year</label>
+                  <label className="text-xs font-mono uppercase text-slate-400">Issue Date</label>
                   <input 
-                    type="text" required placeholder="e.g. 2025"
+                    type="date" required
                     className={`bg-[#0F1115] border ${formErrors.issueDate ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none font-mono`}
                     value={certModal.issueDate}
                     onChange={(e) => setCertModal({...certModal, issueDate: e.target.value})}
