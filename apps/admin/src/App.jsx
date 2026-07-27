@@ -33,8 +33,101 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const queryClient = useQueryClient()
 
+  // --- CRUD Modals States ---
+  const [projectModal, setProjectModal] = useState(null) // holds project form object
+  const [skillModal, setSkillModal] = useState(null)
+  const [certModal, setCertModal] = useState(null)
+  const [expModal, setExpModal] = useState(null)
+
+  const [settingsForm, setSettingsForm] = useState(null)
+  const [settingsStatus, setSettingsStatus] = useState('')
+
   // Custom demo mode fallback when backend is unreachable/offline
   const [isDemoMode, setIsDemoMode] = useState(localStorage.getItem('admin_token') === 'demo_jwt_token_auth_preset')
+
+  // Toast System
+  const [toast, setToast] = useState(null)
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type })
+  }
+
+  React.useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3500)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
+
+  // Custom Confirmation Dialogs
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+
+  // Unsaved Changes Tracking
+  const [modalInitialData, setModalInitialData] = useState(null)
+
+  // Form Validation
+  const [formErrors, setFormErrors] = useState({})
+
+  const validateForm = (type, data) => {
+    const errors = {}
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/
+    
+    if (type === 'project') {
+      if (!data.title?.trim()) errors.title = 'Project title is required'
+      if (!data.description?.trim()) errors.description = 'Description is required'
+      if (data.githubUrl && !urlPattern.test(data.githubUrl)) errors.githubUrl = 'Invalid URL format'
+      if (data.demoUrl && !urlPattern.test(data.demoUrl)) errors.demoUrl = 'Invalid URL format'
+      if (data.readmeLink && !urlPattern.test(data.readmeLink)) errors.readmeLink = 'Invalid URL format'
+    } else if (type === 'skill') {
+      if (!data.name?.trim()) errors.name = 'Skill name is required'
+      if (!data.experienceLevel?.trim()) errors.experienceLevel = 'Experience level is required'
+    } else if (type === 'cert') {
+      if (!data.name?.trim()) errors.name = 'Certification name is required'
+      if (!data.organization?.trim()) errors.organization = 'Issuing organization is required'
+      if (!data.issueDate?.trim()) errors.issueDate = 'Issue date/year is required'
+      if (data.verifyLink && !urlPattern.test(data.verifyLink)) errors.verifyLink = 'Invalid URL format (must be full URL or valid path)'
+    } else if (type === 'exp') {
+      if (!data.company?.trim()) errors.company = 'Company name is required'
+      if (!data.role?.trim()) errors.role = 'Role title is required'
+      if (!data.duration?.trim()) errors.duration = 'Duration is required'
+      if (!data.description?.trim()) errors.description = 'Description is required'
+    }
+    return errors
+  }
+
+  // Modal Open wrappers
+  const openProjectModal = (proj) => {
+    setProjectModal(proj)
+    setModalInitialData(proj)
+    setFormErrors({})
+  }
+  const openSkillModal = (skill) => {
+    setSkillModal(skill)
+    setModalInitialData(skill)
+    setFormErrors({})
+  }
+  const openCertModal = (cert) => {
+    setCertModal(cert)
+    setModalInitialData(cert)
+    setFormErrors({})
+  }
+  const openExpModal = (exp) => {
+    setExpModal(exp)
+    setModalInitialData(exp)
+    setFormErrors({})
+  }
+
+  const handleCancelModal = (closeFn, modalState) => {
+    const isDirty = modalState && modalInitialData && JSON.stringify(modalState) !== JSON.stringify(modalInitialData)
+    if (isDirty) {
+      if (!confirm('You have unsaved changes. Discard them?')) {
+        return
+      }
+    }
+    closeFn(null)
+    setModalInitialData(null)
+    setFormErrors({})
+  }
+
 
   // Auth headers
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
@@ -156,100 +249,318 @@ export default function App() {
   // Projects
   const saveProjectMutation = useMutation({
     mutationFn: (p) => {
+      if (isDemoMode) return Promise.resolve({ data: p })
       if (p.id) return axios.put(`${API_BASE}/admin/projects/${p.id}`, p, authHeaders)
       return axios.post(`${API_BASE}/admin/projects`, p, authHeaders)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin_projects'])
+    onSuccess: (res, variables) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_projects'], (old) => {
+          const item = res.data
+          if (item.id) {
+            return old.map(o => o.id === item.id ? { ...o, ...item } : o)
+          } else {
+            const nextId = old.length ? Math.max(...old.map(o => o.id)) + 1 : 1
+            return [...old, { ...item, id: nextId }]
+          }
+        })
+        showToast('Demo Mode: Project changes simulated locally!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_projects'])
+        showToast(variables.id ? 'Project updated successfully!' : 'Project created successfully!', 'success')
+      }
       setProjectModal(null)
+      setModalInitialData(null)
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Save failed: ${err.message || 'Unknown error'}`, 'error')
+      }
     }
   })
 
   const deleteProjectMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${API_BASE}/admin/projects/${id}`, authHeaders),
-    onSuccess: () => queryClient.invalidateQueries(['admin_projects'])
+    mutationFn: (id) => {
+      if (isDemoMode) return Promise.resolve({ data: id })
+      return axios.delete(`${API_BASE}/admin/projects/${id}`, authHeaders)
+    },
+    onSuccess: (res, id) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_projects'], (old) => old.filter(o => o.id !== id))
+        showToast('Demo Mode: Project deletion simulated!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_projects'])
+        showToast('Project deleted successfully!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Delete failed: ${err.message || 'Unknown error'}`, 'error')
+      }
+    }
   })
 
   // Skills
   const saveSkillMutation = useMutation({
     mutationFn: (s) => {
+      if (isDemoMode) return Promise.resolve({ data: s })
       if (s.id) return axios.put(`${API_BASE}/admin/skills/${s.id}`, s, authHeaders)
       return axios.post(`${API_BASE}/admin/skills`, s, authHeaders)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin_skills'])
+    onSuccess: (res, variables) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_skills'], (old) => {
+          const item = res.data
+          if (item.id) {
+            return old.map(o => o.id === item.id ? { ...o, ...item } : o)
+          } else {
+            const nextId = old.length ? Math.max(...old.map(o => o.id)) + 1 : 1
+            return [...old, { ...item, id: nextId }]
+          }
+        })
+        showToast('Demo Mode: Skill changes simulated locally!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_skills'])
+        showToast(variables.id ? 'Skill updated successfully!' : 'Skill created successfully!', 'success')
+      }
       setSkillModal(null)
+      setModalInitialData(null)
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Save failed: ${err.message || 'Unknown error'}`, 'error')
+      }
     }
   })
 
   const deleteSkillMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${API_BASE}/admin/skills/${id}`, authHeaders),
-    onSuccess: () => queryClient.invalidateQueries(['admin_skills'])
+    mutationFn: (id) => {
+      if (isDemoMode) return Promise.resolve({ data: id })
+      return axios.delete(`${API_BASE}/admin/skills/${id}`, authHeaders)
+    },
+    onSuccess: (res, id) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_skills'], (old) => old.filter(o => o.id !== id))
+        showToast('Demo Mode: Skill deletion simulated!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_skills'])
+        showToast('Skill deleted successfully!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Delete failed: ${err.message || 'Unknown error'}`, 'error')
+      }
+    }
   })
 
   // Certifications
   const saveCertMutation = useMutation({
     mutationFn: (c) => {
+      if (isDemoMode) return Promise.resolve({ data: c })
       if (c.id) return axios.put(`${API_BASE}/admin/certifications/${c.id}`, c, authHeaders)
       return axios.post(`${API_BASE}/admin/certifications`, c, authHeaders)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin_certifications'])
+    onSuccess: (res, variables) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_certifications'], (old) => {
+          const item = res.data
+          if (item.id) {
+            return old.map(o => o.id === item.id ? { ...o, ...item } : o)
+          } else {
+            const nextId = old.length ? Math.max(...old.map(o => o.id)) + 1 : 1
+            return [...old, { ...item, id: nextId }]
+          }
+        })
+        showToast('Demo Mode: Certification changes simulated locally!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_certifications'])
+        showToast(variables.id ? 'Certification updated successfully!' : 'Certification created successfully!', 'success')
+      }
       setCertModal(null)
+      setModalInitialData(null)
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Save failed: ${err.message || 'Unknown error'}`, 'error')
+      }
     }
   })
 
   const deleteCertMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${API_BASE}/admin/certifications/${id}`, authHeaders),
-    onSuccess: () => queryClient.invalidateQueries(['admin_certifications'])
+    mutationFn: (id) => {
+      if (isDemoMode) return Promise.resolve({ data: id })
+      return axios.delete(`${API_BASE}/admin/certifications/${id}`, authHeaders)
+    },
+    onSuccess: (res, id) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_certifications'], (old) => old.filter(o => o.id !== id))
+        showToast('Demo Mode: Certification deletion simulated!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_certifications'])
+        showToast('Certification deleted successfully!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Delete failed: ${err.message || 'Unknown error'}`, 'error')
+      }
+    }
   })
 
   // Experience
   const saveExpMutation = useMutation({
     mutationFn: (e) => {
+      if (isDemoMode) return Promise.resolve({ data: e })
       if (e.id) return axios.put(`${API_BASE}/admin/experience/${e.id}`, e, authHeaders)
       return axios.post(`${API_BASE}/admin/experience`, e, authHeaders)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin_experience'])
+    onSuccess: (res, variables) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_experience'], (old) => {
+          const item = res.data
+          if (item.id) {
+            return old.map(o => o.id === item.id ? { ...o, ...item } : o)
+          } else {
+            const nextId = old.length ? Math.max(...old.map(o => o.id)) + 1 : 1
+            return [...old, { ...item, id: nextId }]
+          }
+        })
+        showToast('Demo Mode: Experience changes simulated locally!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_experience'])
+        showToast(variables.id ? 'Experience slot updated successfully!' : 'Experience slot created successfully!', 'success')
+      }
       setExpModal(null)
+      setModalInitialData(null)
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Save failed: ${err.message || 'Unknown error'}`, 'error')
+      }
     }
   })
 
   const deleteExpMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${API_BASE}/admin/experience/${id}`, authHeaders),
-    onSuccess: () => queryClient.invalidateQueries(['admin_experience'])
+    mutationFn: (id) => {
+      if (isDemoMode) return Promise.resolve({ data: id })
+      return axios.delete(`${API_BASE}/admin/experience/${id}`, authHeaders)
+    },
+    onSuccess: (res, id) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_experience'], (old) => old.filter(o => o.id !== id))
+        showToast('Demo Mode: Experience deletion simulated!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_experience'])
+        showToast('Experience slot deleted successfully!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Delete failed: ${err.message || 'Unknown error'}`, 'error')
+      }
+    }
   })
 
   // Site Settings
   const saveSettingsMutation = useMutation({
-    mutationFn: (s) => axios.put(`${API_BASE}/admin/settings`, s, authHeaders),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin_settings'])
-      setSettingsStatus('Settings updated successfully!')
-      setTimeout(() => setSettingsStatus(''), 3000)
+    mutationFn: (s) => {
+      if (isDemoMode) return Promise.resolve({ data: s })
+      return axios.put(`${API_BASE}/admin/settings`, s, authHeaders)
+    },
+    onSuccess: (res) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_settings'], res.data)
+        showToast('Demo Mode: Site settings simulated locally!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_settings'])
+        showToast('Settings saved successfully!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Save failed: ${err.message || 'Unknown error'}`, 'error')
+      }
     }
   })
 
   // Messages Inbox
   const markMessageReadMutation = useMutation({
-    mutationFn: (id) => axios.put(`${API_BASE}/admin/contact-messages/${id}`, { status: 'READ' }, authHeaders),
-    onSuccess: () => queryClient.invalidateQueries(['admin_messages'])
+    mutationFn: (id) => {
+      if (isDemoMode) return Promise.resolve({ data: id })
+      return axios.put(`${API_BASE}/admin/contact-messages/${id}`, { status: 'READ' }, authHeaders)
+    },
+    onSuccess: (res, id) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_messages'], (old) => old.map(m => m.id === id ? { ...m, status: 'READ' } : m))
+        showToast('Demo Mode: Message status simulated!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_messages'])
+        showToast('Message marked as read!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Action failed: ${err.message || 'Unknown error'}`, 'error')
+      }
+    }
   })
 
   const deleteMessageMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${API_BASE}/admin/contact-messages/${id}`, authHeaders),
-    onSuccess: () => queryClient.invalidateQueries(['admin_messages'])
+    mutationFn: (id) => {
+      if (isDemoMode) return Promise.resolve({ data: id })
+      return axios.delete(`${API_BASE}/admin/contact-messages/${id}`, authHeaders)
+    },
+    onSuccess: (res, id) => {
+      if (isDemoMode) {
+        queryClient.setQueryData(['admin_messages'], (old) => old.filter(m => m.id !== id))
+        showToast('Demo Mode: Message deletion simulated!', 'info')
+      } else {
+        queryClient.invalidateQueries(['admin_messages'])
+        showToast('Message deleted successfully!', 'success')
+      }
+    },
+    onError: (err) => {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else {
+        showToast(`Delete failed: ${err.message || 'Unknown error'}`, 'error')
+      }
+    }
   })
 
-  // --- CRUD Modals States ---
-  const [projectModal, setProjectModal] = useState(null) // holds project form object
-  const [skillModal, setSkillModal] = useState(null)
-  const [certModal, setCertModal] = useState(null)
-  const [expModal, setExpModal] = useState(null)
 
-  const [settingsForm, setSettingsForm] = useState(null)
-  const [settingsStatus, setSettingsStatus] = useState('')
 
   // Compute Telemetry Traffic Source Statistics
   const getTrafficSources = (logs) => {
@@ -476,7 +787,7 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-end">
               <button 
-                onClick={() => setProjectModal({ title: '', description: '', githubUrl: '', demoUrl: '', readmeLink: '', challenges: '', features: '', featured: false, displayOrder: 0, statusEnum: 'PLANNING' })}
+                onClick={() => openProjectModal({ title: '', description: '', githubUrl: '', demoUrl: '', readmeLink: '', challenges: '', features: '', featured: false, displayOrder: 0, statusEnum: 'PLANNING' })}
                 className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10"
               >
                 <PlusCircle size={14} /> Add Project Profile
@@ -506,8 +817,8 @@ export default function App() {
                       </td>
                       <td className="py-3.5 px-4 font-mono">{proj.featured ? 'YES' : 'NO'}</td>
                       <td className="py-3.5 px-4 flex gap-4 text-slate-400">
-                        <button onClick={() => setProjectModal(proj)} className="hover:text-white transition"><Edit size={15} /></button>
-                        <button onClick={() => { if(confirm('Delete project?')) deleteProjectMutation.mutate(proj.id) }} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
+                        <button onClick={() => openProjectModal(proj)} className="hover:text-white transition"><Edit size={15} /></button>
+                        <button onClick={() => setDeleteConfirm({ message: `Are you sure you want to delete project "${proj.title}"?`, onConfirm: () => deleteProjectMutation.mutate(proj.id) })} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
                       </td>
                     </tr>
                   ))}
@@ -522,7 +833,7 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-end">
               <button 
-                onClick={() => setSkillModal({ name: '', category: 'PROGRAMMING', confidence: 80, experienceLevel: 'Intermediate', displayOrder: 0, visible: true })}
+                onClick={() => openSkillModal({ name: '', category: 'PROGRAMMING', confidence: 80, experienceLevel: 'Intermediate', displayOrder: 0, visible: true })}
                 className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10"
               >
                 <PlusCircle size={14} /> Add Skill Card
@@ -550,8 +861,8 @@ export default function App() {
                       <td className="py-3.5 px-4">{skill.experienceLevel}</td>
                       <td className="py-3.5 px-4 font-mono">{skill.visible ? 'YES' : 'NO'}</td>
                       <td className="py-3.5 px-4 flex gap-4 text-slate-400">
-                        <button onClick={() => setSkillModal(skill)} className="hover:text-white transition"><Edit size={15} /></button>
-                        <button onClick={() => { if(confirm('Delete skill?')) deleteSkillMutation.mutate(skill.id) }} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
+                        <button onClick={() => openSkillModal(skill)} className="hover:text-white transition"><Edit size={15} /></button>
+                        <button onClick={() => setDeleteConfirm({ message: `Are you sure you want to delete skill "${skill.name}"?`, onConfirm: () => deleteSkillMutation.mutate(skill.id) })} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
                       </td>
                     </tr>
                   ))}
@@ -566,7 +877,7 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-end">
               <button 
-                onClick={() => setCertModal({ name: '', organization: '', issueDate: '', verifyLink: '' })}
+                onClick={() => openCertModal({ name: '', organization: '', issueDate: '', verifyLink: '' })}
                 className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10"
               >
                 <PlusCircle size={14} /> Add Certification
@@ -592,8 +903,8 @@ export default function App() {
                       <td className="py-3.5 px-4 font-mono">{cert.issueDate}</td>
                       <td className="py-3.5 px-4 font-mono text-xs text-blue-400 select-all">{cert.verifyLink}</td>
                       <td className="py-3.5 px-4 flex gap-4 text-slate-400">
-                        <button onClick={() => setCertModal(cert)} className="hover:text-white transition"><Edit size={15} /></button>
-                        <button onClick={() => { if(confirm('Delete certification?')) deleteCertMutation.mutate(cert.id) }} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
+                        <button onClick={() => openCertModal(cert)} className="hover:text-white transition"><Edit size={15} /></button>
+                        <button onClick={() => setDeleteConfirm({ message: `Are you sure you want to delete certification "${cert.name}"?`, onConfirm: () => deleteCertMutation.mutate(cert.id) })} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
                       </td>
                     </tr>
                   ))}
@@ -608,7 +919,7 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-end">
               <button 
-                onClick={() => setExpModal({ company: '', role: '', duration: '', description: '' })}
+                onClick={() => openExpModal({ company: '', role: '', duration: '', description: '' })}
                 className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/10"
               >
                 <PlusCircle size={14} /> Add Experience Slot
@@ -634,8 +945,8 @@ export default function App() {
                       <td className="py-3.5 px-4 font-mono text-xs text-blue-400">{exp.duration}</td>
                       <td className="py-3.5 px-4 max-w-[320px] truncate text-slate-400">{exp.description}</td>
                       <td className="py-3.5 px-4 flex gap-4 text-slate-400">
-                        <button onClick={() => setExpModal(exp)} className="hover:text-white transition"><Edit size={15} /></button>
-                        <button onClick={() => { if(confirm('Delete experience?')) deleteExpMutation.mutate(exp.id) }} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
+                        <button onClick={() => openExpModal(exp)} className="hover:text-white transition"><Edit size={15} /></button>
+                        <button onClick={() => setDeleteConfirm({ message: `Are you sure you want to delete experience slot at "${exp.company}"?`, onConfirm: () => deleteExpMutation.mutate(exp.id) })} className="hover:text-red-400 transition"><Trash2 size={15} /></button>
                       </td>
                     </tr>
                   ))}
@@ -646,81 +957,93 @@ export default function App() {
         )}
 
         {/* Tab 6: Site Settings Panel */}
-        {activeTab === 'settings' && settingsForm && (
-          <div className="bg-[#181C23] border border-[#252B35] p-8 rounded-lg animate-fadeIn max-w-[700px] space-y-6">
-            <h3 className="text-sm font-bold text-blue-500 uppercase font-mono tracking-wider">Configure Layout Variables</h3>
-            
-            {settingsStatus && <p className="text-xs text-blue-400 font-mono">{settingsStatus}</p>}
+        {activeTab === 'settings' && settingsForm && (() => {
+          const isSettingsDirty = settings && JSON.stringify(settingsForm) !== JSON.stringify(settings)
+          return (
+            <div className="bg-[#181C23] border border-[#252B35] p-8 rounded-lg animate-fadeIn max-w-[700px] space-y-6">
+              <h3 className="text-sm font-bold text-blue-500 uppercase font-mono tracking-wider">Configure Layout Variables</h3>
+              
+              {settingsStatus && <p className="text-xs text-blue-400 font-mono">{settingsStatus}</p>}
 
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault()
-                saveSettingsMutation.mutate(settingsForm)
-              }}
-              className="space-y-4 text-sm"
-            >
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-mono uppercase text-slate-400">Hero Title Headline</label>
-                <input 
-                  type="text" 
-                  required
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
-                  value={settingsForm.heroHeadline}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, heroHeadline: e.target.value })}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-mono uppercase text-slate-400">Hero Subtitle</label>
-                <textarea 
-                  required
-                  rows="3"
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none resize-none"
-                  value={settingsForm.heroSubtitle}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, heroSubtitle: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  saveSettingsMutation.mutate(settingsForm)
+                }}
+                className="space-y-4 text-sm"
+              >
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-mono uppercase text-slate-400">Location Tag</label>
+                  <label className="text-xs font-mono uppercase text-slate-400">Hero Title Headline</label>
                   <input 
                     type="text" 
                     required
                     className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
-                    value={settingsForm.location}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, location: e.target.value })}
+                    value={settingsForm.heroHeadline}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, heroHeadline: e.target.value })}
                   />
                 </div>
+
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-mono uppercase text-slate-400">Availability Status</label>
+                  <label className="text-xs font-mono uppercase text-slate-400">Hero Subtitle</label>
+                  <textarea 
+                    required
+                    rows="3"
+                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none resize-none"
+                    value={settingsForm.heroSubtitle}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, heroSubtitle: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-mono uppercase text-slate-400">Location Tag</label>
+                    <input 
+                      type="text" 
+                      required
+                      className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                      value={settingsForm.location}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, location: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-mono uppercase text-slate-400">Availability Status</label>
+                    <input 
+                      type="text" 
+                      required
+                      className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                      value={settingsForm.availability}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, availability: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-mono uppercase text-slate-400">Profile Image Path</label>
                   <input 
                     type="text" 
                     required
                     className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
-                    value={settingsForm.availability}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, availability: e.target.value })}
+                    value={settingsForm.profileImage}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, profileImage: e.target.value })}
                   />
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-mono uppercase text-slate-400">Profile Image Path</label>
-                <input 
-                  type="text" 
-                  required
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
-                  value={settingsForm.profileImage}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, profileImage: e.target.value })}
-                />
-              </div>
-
-              <button type="submit" className="py-2.5 px-5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all">
-                Save Site Configurations
-              </button>
-            </form>
-          </div>
-        )}
+                <button 
+                  type="submit" 
+                  disabled={saveSettingsMutation.isPending || !isSettingsDirty} 
+                  className={`py-2.5 px-5 text-white font-bold rounded-md text-xs shadow-md transition-all flex items-center gap-2 ${
+                    !isSettingsDirty 
+                      ? 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-[#252B35]' 
+                      : 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/10'
+                  }`}
+                >
+                  {saveSettingsMutation.isPending ? 'Saving...' : 'Save Site Configurations'}
+                  {isSettingsDirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>}
+                </button>
+              </form>
+            </div>
+          )
+        })()}
 
         {/* Tab 7: Messages Inbox */}
         {activeTab === 'messages' && (
@@ -741,7 +1064,7 @@ export default function App() {
                         <Check size={12} /> Mark Read
                       </button>
                     )}
-                    <button onClick={() => { if(confirm('Delete message?')) deleteMessageMutation.mutate(msg.id) }} className="py-1.5 px-3 border border-[#252B35] hover:border-red-500 text-slate-200 hover:text-red-400 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all">
+                    <button onClick={() => setDeleteConfirm({ message: `Are you sure you want to delete this message from "${msg.senderName}"?`, onConfirm: () => deleteMessageMutation.mutate(msg.id) })} className="py-1.5 px-3 border border-[#252B35] hover:border-red-500 text-slate-200 hover:text-red-400 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all">
                       <Trash2 size={12} /> Delete
                     </button>
                   </div>
@@ -767,12 +1090,18 @@ export default function App() {
           <div className="bg-[#181C23] border border-[#252B35] w-full max-w-[650px] rounded-lg shadow-2xl overflow-hidden">
             <div className="bg-[#0F1115] border-b border-[#252B35] px-6 py-4 flex justify-between items-center">
               <h3 className="font-display font-bold text-white text-base">{projectModal.id ? 'Edit Project Dossier' : 'Create Project Dossier'}</h3>
-              <button onClick={() => setProjectModal(null)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
+              <button onClick={() => handleCancelModal(setProjectModal, projectModal)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
             </div>
             
             <form 
               onSubmit={(e) => {
                 e.preventDefault()
+                const errors = validateForm('project', projectModal)
+                if (Object.keys(errors).length > 0) {
+                  setFormErrors(errors)
+                  showToast('Please correct form validation errors', 'error')
+                  return
+                }
                 saveProjectMutation.mutate(projectModal)
               }}
               className="p-6 space-y-4 text-sm"
@@ -782,10 +1111,11 @@ export default function App() {
                   <label className="text-xs font-mono uppercase text-slate-400">Project Title</label>
                   <input 
                     type="text" required placeholder="Project Title"
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className={`bg-[#0F1115] border ${formErrors.title ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                     value={projectModal.title}
                     onChange={(e) => setProjectModal({...projectModal, title: e.target.value})}
                   />
+                  {formErrors.title && <span className="text-[10px] text-red-400 font-mono">{formErrors.title}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">Execution Status</label>
@@ -806,11 +1136,12 @@ export default function App() {
                 <label className="text-xs font-mono uppercase text-slate-400">Description Summary</label>
                 <textarea 
                   required placeholder="Core description of what this project accomplished..."
-                  className="w-full bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none resize-none"
+                  className={`w-full bg-[#0F1115] border ${formErrors.description ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none resize-none`}
                   rows="3"
                   value={projectModal.description}
                   onChange={(e) => setProjectModal({...projectModal, description: e.target.value})}
                 />
+                {formErrors.description && <span className="text-[10px] text-red-400 font-mono">{formErrors.description}</span>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -818,28 +1149,31 @@ export default function App() {
                   <label className="text-xs font-mono uppercase text-slate-400">GitHub Repository URL</label>
                   <input 
                     type="text" placeholder="https://github.com/..."
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-                    value={projectModal.githubUrl}
+                    className={`bg-[#0F1115] border ${formErrors.githubUrl ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
+                    value={projectModal.githubUrl || ''}
                     onChange={(e) => setProjectModal({...projectModal, githubUrl: e.target.value})}
                   />
+                  {formErrors.githubUrl && <span className="text-[10px] text-red-400 font-mono">{formErrors.githubUrl}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">README Link</label>
                   <input 
                     type="text" placeholder="https://github.com/...#readme"
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className={`bg-[#0F1115] border ${formErrors.readmeLink ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                     value={projectModal.readmeLink || ''}
                     onChange={(e) => setProjectModal({...projectModal, readmeLink: e.target.value})}
                   />
+                  {formErrors.readmeLink && <span className="text-[10px] text-red-400 font-mono">{formErrors.readmeLink}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">Live Demo URL</label>
                   <input 
                     type="text" placeholder="https://..."
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-                    value={projectModal.demoUrl}
+                    className={`bg-[#0F1115] border ${formErrors.demoUrl ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
+                    value={projectModal.demoUrl || ''}
                     onChange={(e) => setProjectModal({...projectModal, demoUrl: e.target.value})}
                   />
+                  {formErrors.demoUrl && <span className="text-[10px] text-red-400 font-mono">{formErrors.demoUrl}</span>}
                 </div>
               </div>
 
@@ -887,8 +1221,17 @@ export default function App() {
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-[#252B35]/40">
-                <button type="button" onClick={() => setProjectModal(null)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all">Save Dossier</button>
+                <button type="button" onClick={() => handleCancelModal(setProjectModal, projectModal)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={saveProjectMutation.isPending}
+                  className="py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all flex items-center gap-2"
+                >
+                  {saveProjectMutation.isPending ? 'Saving...' : 'Save Dossier'}
+                  {projectModal && modalInitialData && JSON.stringify(projectModal) !== JSON.stringify(modalInitialData) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  )}
+                </button>
               </div>
             </form>
           </div>
@@ -901,12 +1244,18 @@ export default function App() {
           <div className="bg-[#181C23] border border-[#252B35] w-full max-w-[500px] rounded-lg shadow-2xl overflow-hidden">
             <div className="bg-[#0F1115] border-b border-[#252B35] px-6 py-4 flex justify-between items-center">
               <h3 className="font-display font-bold text-white text-base">{skillModal.id ? 'Edit Skill Card' : 'Create Skill Card'}</h3>
-              <button onClick={() => setSkillModal(null)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
+              <button onClick={() => handleCancelModal(setSkillModal, skillModal)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
             </div>
             
             <form 
               onSubmit={(e) => {
                 e.preventDefault()
+                const errors = validateForm('skill', skillModal)
+                if (Object.keys(errors).length > 0) {
+                  setFormErrors(errors)
+                  showToast('Please correct form validation errors', 'error')
+                  return
+                }
                 saveSkillMutation.mutate(skillModal)
               }}
               className="p-6 space-y-4 text-sm"
@@ -916,10 +1265,11 @@ export default function App() {
                   <label className="text-xs font-mono uppercase text-slate-400">Skill Name</label>
                   <input 
                     type="text" required placeholder="Skill Name"
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className={`bg-[#0F1115] border ${formErrors.name ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                     value={skillModal.name}
                     onChange={(e) => setSkillModal({...skillModal, name: e.target.value})}
                   />
+                  {formErrors.name && <span className="text-[10px] text-red-400 font-mono">{formErrors.name}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">Category Group</label>
@@ -953,10 +1303,11 @@ export default function App() {
                   <label className="text-xs font-mono uppercase text-slate-400">Experience Label</label>
                   <input 
                     type="text" placeholder="Advanced, Intermediate..."
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-                    value={skillModal.experienceLevel}
+                    className={`bg-[#0F1115] border ${formErrors.experienceLevel ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
+                    value={skillModal.experienceLevel || ''}
                     onChange={(e) => setSkillModal({...skillModal, experienceLevel: e.target.value})}
                   />
+                  {formErrors.experienceLevel && <span className="text-[10px] text-red-400 font-mono">{formErrors.experienceLevel}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">Display Order</label>
@@ -980,8 +1331,17 @@ export default function App() {
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-[#252B35]/40">
-                <button type="button" onClick={() => setSkillModal(null)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all">Save Skill</button>
+                <button type="button" onClick={() => handleCancelModal(setSkillModal, skillModal)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={saveSkillMutation.isPending}
+                  className="py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all flex items-center gap-2"
+                >
+                  {saveSkillMutation.isPending ? 'Saving...' : 'Save Skill'}
+                  {skillModal && modalInitialData && JSON.stringify(skillModal) !== JSON.stringify(modalInitialData) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  )}
+                </button>
               </div>
             </form>
           </div>
@@ -994,12 +1354,18 @@ export default function App() {
           <div className="bg-[#181C23] border border-[#252B35] w-full max-w-[500px] rounded-lg shadow-2xl overflow-hidden">
             <div className="bg-[#0F1115] border-b border-[#252B35] px-6 py-4 flex justify-between items-center">
               <h3 className="font-display font-bold text-white text-base">{certModal.id ? 'Edit Certificate' : 'Create Certificate'}</h3>
-              <button onClick={() => setCertModal(null)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
+              <button onClick={() => handleCancelModal(setCertModal, certModal)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
             </div>
             
             <form 
               onSubmit={(e) => {
                 e.preventDefault()
+                const errors = validateForm('cert', certModal)
+                if (Object.keys(errors).length > 0) {
+                  setFormErrors(errors)
+                  showToast('Please correct form validation errors', 'error')
+                  return
+                }
                 saveCertMutation.mutate(certModal)
               }}
               className="p-6 space-y-4 text-sm"
@@ -1008,20 +1374,22 @@ export default function App() {
                 <label className="text-xs font-mono uppercase text-slate-400">Certification Name</label>
                 <input 
                   type="text" required placeholder="Certification Name"
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  className={`bg-[#0F1115] border ${formErrors.name ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                   value={certModal.name}
                   onChange={(e) => setCertModal({...certModal, name: e.target.value})}
                 />
+                {formErrors.name && <span className="text-[10px] text-red-400 font-mono">{formErrors.name}</span>}
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-mono uppercase text-slate-400">Issuing Organization</label>
                 <input 
                   type="text" required placeholder="e.g. Cisco Networking Academy"
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  className={`bg-[#0F1115] border ${formErrors.organization ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                   value={certModal.organization}
                   onChange={(e) => setCertModal({...certModal, organization: e.target.value})}
                 />
+                {formErrors.organization && <span className="text-[10px] text-red-400 font-mono">{formErrors.organization}</span>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1029,10 +1397,11 @@ export default function App() {
                   <label className="text-xs font-mono uppercase text-slate-400">Issue Year</label>
                   <input 
                     type="text" required placeholder="e.g. 2025"
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none font-mono"
+                    className={`bg-[#0F1115] border ${formErrors.issueDate ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none font-mono`}
                     value={certModal.issueDate}
                     onChange={(e) => setCertModal({...certModal, issueDate: e.target.value})}
                   />
+                  {formErrors.issueDate && <span className="text-[10px] text-red-400 font-mono">{formErrors.issueDate}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">Sort Order</label>
@@ -1049,15 +1418,25 @@ export default function App() {
                 <label className="text-xs font-mono uppercase text-slate-400">Local Certificate Path</label>
                 <input 
                   type="text" placeholder="/certifiactions/..."
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none font-mono"
-                  value={certModal.verifyLink}
+                  className={`bg-[#0F1115] border ${formErrors.verifyLink ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none font-mono`}
+                  value={certModal.verifyLink || ''}
                   onChange={(e) => setCertModal({...certModal, verifyLink: e.target.value})}
                 />
+                {formErrors.verifyLink && <span className="text-[10px] text-red-400 font-mono">{formErrors.verifyLink}</span>}
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-[#252B35]/40">
-                <button type="button" onClick={() => setCertModal(null)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all">Save Certification</button>
+                <button type="button" onClick={() => handleCancelModal(setCertModal, certModal)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={saveCertMutation.isPending}
+                  className="py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all flex items-center gap-2"
+                >
+                  {saveCertMutation.isPending ? 'Saving...' : 'Save Certification'}
+                  {certModal && modalInitialData && JSON.stringify(certModal) !== JSON.stringify(modalInitialData) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  )}
+                </button>
               </div>
             </form>
           </div>
@@ -1070,12 +1449,18 @@ export default function App() {
           <div className="bg-[#181C23] border border-[#252B35] w-full max-w-[550px] rounded-lg shadow-2xl overflow-hidden">
             <div className="bg-[#0F1115] border-b border-[#252B35] px-6 py-4 flex justify-between items-center">
               <h3 className="font-display font-bold text-white text-base">{expModal.id ? 'Edit Experience Slot' : 'Create Experience Slot'}</h3>
-              <button onClick={() => setExpModal(null)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
+              <button onClick={() => handleCancelModal(setExpModal, expModal)} className="text-slate-400 hover:text-white transition-all"><X size={18} /></button>
             </div>
             
             <form 
               onSubmit={(e) => {
                 e.preventDefault()
+                const errors = validateForm('exp', expModal)
+                if (Object.keys(errors).length > 0) {
+                  setFormErrors(errors)
+                  showToast('Please correct form validation errors', 'error')
+                  return
+                }
                 saveExpMutation.mutate(expModal)
               }}
               className="p-6 space-y-4 text-sm"
@@ -1085,19 +1470,21 @@ export default function App() {
                   <label className="text-xs font-mono uppercase text-slate-400">Company / Organization</label>
                   <input 
                     type="text" required placeholder="Company Name"
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className={`bg-[#0F1115] border ${formErrors.company ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                     value={expModal.company}
                     onChange={(e) => setExpModal({...expModal, company: e.target.value})}
                   />
+                  {formErrors.company && <span className="text-[10px] text-red-400 font-mono">{formErrors.company}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-mono uppercase text-slate-400">Role Title</label>
                   <input 
                     type="text" required placeholder="Google Dev Intern..."
-                    className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className={`bg-[#0F1115] border ${formErrors.role ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none`}
                     value={expModal.role}
                     onChange={(e) => setExpModal({...expModal, role: e.target.value})}
                   />
+                  {formErrors.role && <span className="text-[10px] text-red-400 font-mono">{formErrors.role}</span>}
                 </div>
               </div>
 
@@ -1105,28 +1492,98 @@ export default function App() {
                 <label className="text-xs font-mono uppercase text-slate-400">Duration Range</label>
                 <input 
                   type="text" required placeholder="Dec 2025 - Present"
-                  className="bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none font-mono"
+                  className={`bg-[#0F1115] border ${formErrors.duration ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none font-mono`}
                   value={expModal.duration}
                   onChange={(e) => setExpModal({...expModal, duration: e.target.value})}
                 />
+                {formErrors.duration && <span className="text-[10px] text-red-400 font-mono">{formErrors.duration}</span>}
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-mono uppercase text-slate-400">Role Description & Accomplishments</label>
                 <textarea 
                   required placeholder="Implemented mobile layouts, parameterized sql requests..."
-                  className="w-full bg-[#0F1115] border border-[#252B35] rounded-md px-3 py-2 text-white focus:border-blue-500 focus:outline-none resize-none"
+                  className={`w-full bg-[#0F1115] border ${formErrors.description ? 'border-red-500/50 focus:border-red-500' : 'border-[#252B35] focus:border-blue-500'} rounded-md px-3 py-2 text-white focus:outline-none resize-none`}
                   rows="4"
                   value={expModal.description}
                   onChange={(e) => setExpModal({...expModal, description: e.target.value})}
                 />
+                {formErrors.description && <span className="text-[10px] text-red-400 font-mono">{formErrors.description}</span>}
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-[#252B35]/40">
-                <button type="button" onClick={() => setExpModal(null)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all">Save Slot</button>
+                <button type="button" onClick={() => handleCancelModal(setExpModal, expModal)} className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all">Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={saveExpMutation.isPending}
+                  className="py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 text-white font-bold rounded-md text-xs shadow-md shadow-blue-500/10 transition-all flex items-center gap-2"
+                >
+                  {saveExpMutation.isPending ? 'Saving...' : 'Save Slot'}
+                  {expModal && modalInitialData && JSON.stringify(expModal) !== JSON.stringify(modalInitialData) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  )}
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-[#0F1115]/80 backdrop-blur-sm flex items-center justify-center p-6 z-50 animate-fadeIn">
+          <div className="bg-[#181C23] border border-[#252B35] w-full max-w-[400px] rounded-lg shadow-2xl overflow-hidden p-6 space-y-6 animate-slideIn">
+            <div className="space-y-2">
+              <h3 className="font-display font-bold text-white text-lg">Confirm Action</h3>
+              <p className="text-sm text-slate-400">{deleteConfirm.message}</p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button 
+                type="button" 
+                onClick={() => setDeleteConfirm(null)} 
+                className="py-2 px-4 border border-[#252B35] hover:bg-[#0F1115] rounded-md text-xs font-semibold transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  deleteConfirm.onConfirm()
+                  setDeleteConfirm(null)
+                }} 
+                className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-md text-xs shadow-md shadow-red-500/10 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-50 animate-slideIn">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-2xl backdrop-blur-md ${
+            toast.type === 'success' 
+              ? 'bg-[#181C23]/90 border-emerald-500/30 text-emerald-400' 
+              : toast.type === 'error'
+              ? 'bg-[#181C23]/90 border-red-500/30 text-red-400'
+              : 'bg-[#181C23]/90 border-blue-500/30 text-blue-400'
+          }`}>
+            {toast.type === 'success' ? (
+              <Check size={16} className="text-emerald-500" />
+            ) : toast.type === 'error' ? (
+              <X size={16} className="text-red-500" />
+            ) : (
+              <Activity size={16} className="text-blue-500 animate-pulse" />
+            )}
+            <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+            <button 
+              onClick={() => setToast(null)} 
+              className="ml-2 text-slate-400 hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
           </div>
         </div>
       )}
